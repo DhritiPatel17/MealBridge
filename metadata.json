@@ -1,0 +1,6 @@
+{
+  "name": "MealBridge / अन्नसेतु",
+  "description": "National Surplus Food Network - Real-time surplus logistics bridging banquet halls, caterers, and canteens with verified shelters and local dispatchers.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
