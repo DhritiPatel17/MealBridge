@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, PhoneOff, Mic, MicOff, Volume2, ShieldCheck, User } from 'lucide-react';
+import { PhoneOff, Mic, MicOff, Volume2, User } from 'lucide-react';
 
 interface CallModalProps {
   isOpen: boolean;
@@ -38,57 +38,58 @@ export const CallModal: React.FC<CallModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-[#132238] text-white w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white border border-[#ACC8E5] text-black w-full max-w-sm rounded-[12px] p-6 flex flex-col items-center text-center space-y-5">
         <div className="space-y-1">
-          <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase">
-            SECURE MEALBRIDGE DISPATCH
+          <span className="text-[10px] font-bold text-black uppercase tracking-wider bg-[#ACC8E5] px-2.5 py-0.5 rounded-[12px]">
+            MealBridge Call
           </span>
-          <h3 className="text-xl font-black text-white">{contactName}</h3>
-          <p className="text-xs text-stone-300">{contactPhone}</p>
+          <h3 className="text-lg font-bold text-black pt-1">{contactName}</h3>
+          <p className="text-xs text-black font-normal">{contactPhone}</p>
         </div>
 
-        {/* Pulse avatar */}
+        {/* Avatar */}
         <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-            <User size={40} className="text-stone-300" />
+          <div className="w-20 h-20 rounded-[12px] bg-[#ACC8E5] flex items-center justify-center border border-[#112A46]/20">
+            <User size={36} className="text-[#112A46]" />
           </div>
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-emerald-500 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
+          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#FDFD96] border border-[#D9D975] text-black text-[10px] font-bold px-2 py-0.5 rounded-[12px]">
             {formatTime(callDuration)}
           </span>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-6 pt-2">
+        <div className="flex items-center gap-4 pt-2">
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-              isMuted ? 'bg-white text-stone-900' : 'bg-white/15 text-white hover:bg-white/25'
+            className={`w-10 h-10 rounded-[12px] flex items-center justify-center transition-colors cursor-pointer border ${
+              isMuted
+                ? 'bg-[#112A46] text-white border-[#112A46]'
+                : 'bg-white text-black border-[#ACC8E5] hover:bg-[#ACC8E5]/20'
             }`}
           >
-            {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+            {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
 
           <button
             onClick={onClose}
-            className="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-white shadow-lg cursor-pointer active:scale-95 transition-transform"
+            className="h-10 px-5 rounded-[12px] bg-[#112A46] hover:opacity-90 flex items-center justify-center text-white text-xs font-bold cursor-pointer"
           >
-            <PhoneOff size={26} />
+            <PhoneOff size={16} className="mr-1.5" />
+            <span>End Call / कॉल समाप्त</span>
           </button>
 
           <button
             onClick={() => setIsSpeaker(!isSpeaker)}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-              isSpeaker ? 'bg-white text-stone-900' : 'bg-white/15 text-white hover:bg-white/25'
+            className={`w-10 h-10 rounded-[12px] flex items-center justify-center transition-colors cursor-pointer border ${
+              isSpeaker
+                ? 'bg-[#112A46] text-white border-[#112A46]'
+                : 'bg-white text-black border-[#ACC8E5] hover:bg-[#ACC8E5]/20'
             }`}
           >
-            <Volume2 size={20} />
+            <Volume2 size={18} />
           </button>
         </div>
-
-        <p className="text-[11px] text-stone-400">
-          Direct line encrypted under MealBridge Priority Logistics
-        </p>
       </div>
     </div>
   );

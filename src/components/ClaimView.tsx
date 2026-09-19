@@ -46,6 +46,19 @@ export const ClaimView: React.FC<ClaimViewProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const formatCountdown = (totalSeconds: number) => {
+    if (totalSeconds <= 0) return 'EXPIRED';
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    if (hrs > 0) {
+      return `${hrs} hrs ${mins} min left`;
+    }
+    return `${mins} min ${secs} sec left`;
+  };
+
+  const isExpired = secondsRemaining <= 0;
+
   const handleAccept = () => {
     setIsAccepted(true);
     setTimeout(() => {
@@ -195,6 +208,33 @@ export const ClaimView: React.FC<ClaimViewProps> = ({
               </button>
             </div>
 
+            {/* Food Safety & Cooking Details for NGO */}
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 space-y-2">
+              <div className="flex items-center justify-between text-xs font-extrabold text-amber-900">
+                <span className="flex items-center gap-1.5">
+                  <Clock size={14} className="text-amber-700" />
+                  COOKED AT & SAFETY COUNTDOWN
+                </span>
+                <span className={`font-mono font-bold px-2 py-0.5 rounded-md text-[11px] ${isExpired ? 'bg-rose-600 text-white animate-pulse' : 'bg-amber-200 text-amber-900'}`}>
+                  {formatCountdown(secondsRemaining)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] text-stone-700">
+                <div>
+                  <span className="text-stone-500 block">Cooked Time / बना था:</span>
+                  <span className="font-bold text-stone-900">6:45 PM (Today)</span>
+                </div>
+                <div>
+                  <span className="text-stone-500 block">Eat Before / तक खाएं:</span>
+                  <span className="font-bold text-stone-900">{formatCountdown(secondsRemaining)}</span>
+                </div>
+              </div>
+              <div className="text-[11px] text-stone-700 pt-1 border-t border-amber-200/60">
+                <span className="text-stone-500 font-medium">Packing / पैकिंग: </span>
+                <span className="font-bold text-stone-900">Aluminium foil trays, Plastic container</span>
+              </div>
+            </div>
+
             {/* Gemini Matching Rationale */}
             <div className="bg-sky-50 border border-sky-100 rounded-2xl p-3.5 space-y-1.5">
               <div className="flex items-center gap-1.5 text-sky-900 font-extrabold text-[11px] uppercase tracking-wider">
@@ -211,11 +251,23 @@ export const ClaimView: React.FC<ClaimViewProps> = ({
               <button
                 type="button"
                 onClick={handleAccept}
-                disabled={isAccepted}
-                className="w-full bg-[#132238] hover:bg-[#1c304d] text-white font-extrabold text-xs tracking-wider uppercase py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-98"
+                disabled={isAccepted || isExpired}
+                className={`w-full font-extrabold text-xs tracking-wider uppercase py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer ${
+                  isExpired 
+                    ? 'bg-stone-300 text-stone-600 cursor-not-allowed shadow-none'
+                    : isAccepted 
+                    ? 'bg-[#132238] text-white' 
+                    : 'bg-[#132238] hover:bg-[#1c304d] text-white active:scale-98'
+                }`}
               >
                 <Check size={16} strokeWidth={3} />
-                <span>{isAccepted ? 'ACCEPTING & DISPATCHING...' : 'ACCEPT DONATION / स्वीकार करें'}</span>
+                <span>
+                  {isExpired 
+                    ? 'EXPIRED - CANNOT ACCEPT / समय समाप्त' 
+                    : isAccepted 
+                    ? 'ACCEPTING & DISPATCHING...' 
+                    : 'ACCEPT DONATION / स्वीकार करें'}
+                </span>
               </button>
 
               <button

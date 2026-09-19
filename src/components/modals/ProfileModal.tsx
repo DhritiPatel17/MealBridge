@@ -33,24 +33,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
             {user?.avatarUrl ? (
               <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              <img src="/assets/mealbridge-logo.png" alt="MealBridge Logo" className="w-10 h-10 object-contain" />
+              <img src="/assets/mealbridge-logo.png" alt="MealBridge Logo" className="w-10 h-10 object-contain" style={{ imageRendering: 'auto' }} />
             )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h3 className="font-extrabold text-sm text-stone-900 truncate">
-                {user?.fullName || 'MealBridge User'}
+                {user?.fullName || 'User'}
               </h3>
-              <ShieldCheck size={15} className="text-emerald-600 shrink-0" />
+              {user?.isVerified && (
+                <ShieldCheck size={15} className="text-emerald-600 shrink-0" />
+              )}
             </div>
             <div className="flex items-center gap-1 mt-0.5">
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
-                user?.role === 'donor' ? 'bg-emerald-100 text-emerald-800' :
-                user?.role === 'ngo' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                user?.role === 'donor' ? 'bg-[#ACC8E5]/30 text-[#112A46] border border-[#ACC8E5]' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
               }`}>
-                {user?.role === 'donor' && 'Food Donor'}
-                {user?.role === 'ngo' && 'NGO / Receiver'}
-                {user?.role === 'volunteer' && 'Volunteer / Rider'}
+                {user?.role === 'donor' ? 'Food Donor / अन्नदाता' : 'NGO Partner / एनजीओ'}
               </span>
             </div>
           </div>
@@ -59,11 +58,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
         <div className="space-y-2 text-xs">
           <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
             <span className="text-stone-500 font-medium flex items-center gap-1.5"><Mail size={13} /> Email:</span>
-            <span className="font-semibold text-stone-800 truncate max-w-[180px]">{user?.email || 'user@mealbridge.org'}</span>
+            <span className="font-semibold text-stone-800 truncate max-w-[180px]">{user?.email || '—'}</span>
           </div>
           <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
             <span className="text-stone-500 font-medium flex items-center gap-1.5"><Phone size={13} /> Phone:</span>
-            <span className="font-semibold text-stone-800">{user?.phone || '+91 98765 43210'}</span>
+            <span className="font-semibold text-stone-800">{user?.phone || '—'}</span>
           </div>
 
           {user?.role === 'donor' && (
@@ -72,6 +71,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
                 <span className="text-stone-500 font-medium flex items-center gap-1.5"><Building2 size={13} /> Business:</span>
                 <span className="font-semibold text-stone-800">{user.businessName || 'Canteen'}</span>
               </div>
+              {user.address && (
+                <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
+                  <span className="text-stone-500 font-medium flex items-center gap-1.5"><MapPin size={13} /> Address:</span>
+                  <span className="font-semibold text-stone-800 truncate max-w-[180px]">{user.address}</span>
+                </div>
+              )}
               <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
                 <span className="text-stone-500 font-medium">FSSAI Licence:</span>
                 <span className="font-semibold text-stone-800">{user.fssaiNumber || 'Verified FSSAI'}</span>
@@ -82,25 +87,24 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
           {user?.role === 'ngo' && (
             <>
               <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
-                <span className="text-stone-500 font-medium flex items-center gap-1.5"><Heart size={13} /> Organization:</span>
+                <span className="text-stone-500 font-medium flex items-center gap-1.5"><Heart size={13} /> NGO Name:</span>
                 <span className="font-semibold text-stone-800">{user.ngoName || 'Relief Foundation'}</span>
               </div>
+              {user.regNumber && (
+                <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Registration:</span>
+                  <span className="font-semibold text-stone-800">{user.regNumber}</span>
+                </div>
+              )}
+              {user.address && (
+                <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
+                  <span className="text-stone-500 font-medium flex items-center gap-1.5"><MapPin size={13} /> Hub Area:</span>
+                  <span className="font-semibold text-stone-800 truncate max-w-[180px]">{user.address}</span>
+                </div>
+              )}
               <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
                 <span className="text-stone-500 font-medium">Daily Capacity:</span>
                 <span className="font-semibold text-stone-800">{user.capacity || '200 people'}</span>
-              </div>
-            </>
-          )}
-
-          {user?.role === 'volunteer' && (
-            <>
-              <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
-                <span className="text-stone-500 font-medium flex items-center gap-1.5"><Truck size={13} /> Locality:</span>
-                <span className="font-semibold text-stone-800">{user.locality || 'Sector 14'}</span>
-              </div>
-              <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
-                <span className="text-stone-500 font-medium">Transport Mode:</span>
-                <span className="font-semibold text-stone-800">{user.transportMode || 'Bike'}</span>
               </div>
             </>
           )}

@@ -1,4 +1,13 @@
-export type TabType = 'home' | 'donate' | 'claim' | 'tracking' | 'impact';
+export type TabType =
+  | 'donate'
+  | 'my-donations'
+  | 'new-requests'
+  | 'my-pickups'
+  | 'profile'
+  | 'home'
+  | 'claim'
+  | 'tracking'
+  | 'impact';
 
 export type FoodCategory = 'pure-veg' | 'non-veg' | 'mixed';
 
@@ -14,6 +23,10 @@ export interface DonationOrder {
   servings: number;
   netMassKg: number;
   safeUntil: string;
+  packingTypes?: string[];
+  safeUntilTimestamp?: number;
+  expiryDateOnPack?: string;
+  cookedDay?: 'Today' | 'Yesterday';
   ambientTemp: string;
   packaging: PackagingFormat;
   cookedAt: string;
@@ -40,6 +53,8 @@ export interface DonationOrder {
   riderRating: number;
   riderRuns: number;
   riderPhone: string;
+  latitude?: number;
+  longitude?: number;
   eta: string;
   etaRemainingMinutes: number;
   distanceKm: number;

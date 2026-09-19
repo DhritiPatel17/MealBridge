@@ -1,6 +1,7 @@
 {
   "name": "MealBridge / अन्नसेतु",
-  "description": "National Surplus Food Network - Real-time surplus logistics bridging banquet halls, caterers, and canteens with verified shelters and local dispatchers.",
+  "description": "Surplus Food Network - Vadodara - Real-time surplus food sharing bridging kitchens with verified shelters in Vadodara.",
   "requestFramePermissions": ["camera", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
+

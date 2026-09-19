@@ -76,7 +76,11 @@ export const TrackingView: React.FC<TrackingViewProps> = ({
 
         <div className="flex items-center gap-2 text-xs text-stone-600">
           <Store size={15} className="text-stone-500 shrink-0" />
-          <span className="font-medium truncate">{order.donorAddress}</span>
+          <span className="font-medium truncate">
+            {order.status === 'reported' || order.status === 'matched'
+              ? (order.donorAddress.includes(',') ? order.donorAddress.split(',').slice(-2).join(',').trim() : order.donorAddress)
+              : order.donorAddress}
+          </span>
           <span className="text-stone-300">•</span>
           <span className="shrink-0">Picked up {order.pickupTime}</span>
         </div>

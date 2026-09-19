@@ -64,7 +64,7 @@ export const initialClaimItem = {
   donorName: 'Grand Imperial Caterers',
   donorDistance: '1.4 km away',
   donorStats: '4.9 ★ (34 rescues)',
-  donorPhone: '+91 98112 33455',
+  donorPhone: '+91 98XXXXXXXX',
   rationale: 'Matched because Roti Bank Chapter #4 is 1.4 km (6 mins drive) away, has capacity for 85+ portions, and maintains a 4.9★ pickup punctuality score.',
   timeRemainingSeconds: 398, // 06:38
 };

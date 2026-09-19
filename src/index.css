@@ -1,8 +1,34 @@
 @import "tailwindcss";
 
+:root {
+  --color-primary: #112A46;
+  --color-soft: #ACC8E5;
+  --color-accent: #FDFD96;
+  --color-text: #000000;
+  --color-white: #FFFFFF;
+  --color-bg-ngo: #FAF9DE;
+  --page-gradient: linear-gradient(180deg, #ACC8E5 0%, #DCE8F4 45%, #FFFFFF 100%);
+  --card-shadow: 0 4px 14px rgba(17, 42, 70, 0.08);
+  --cta-shadow: 0 6px 16px rgba(17, 42, 70, 0.25);
+}
+
 @layer base {
+  html, body {
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
-    font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    font-weight: 400;
+    color: #000000;
+    background: var(--page-gradient);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6, strong, b, .font-bold, .font-extrabold, .font-black, .font-semibold {
+    font-weight: 700;
   }
 }

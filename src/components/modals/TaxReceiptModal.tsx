@@ -28,8 +28,8 @@ export const TaxReceiptModal: React.FC<TaxReceiptModalProps> = ({ isOpen, onClos
         {/* Certificate Card */}
         <div className="border-2 border-dashed border-stone-300 rounded-2xl p-4 bg-stone-50 space-y-3 font-mono text-xs text-stone-800">
           <div className="text-center border-b border-stone-200 pb-2">
-            <div className="font-extrabold text-stone-900 tracking-wider">
-              MEALBRIDGE FOUNDATION
+            <div className="font-bold text-[#112A46] tracking-wide">
+              MealBridge Foundation
             </div>
             <div className="text-[10px] text-stone-500">
               Reg. Section 12A &amp; 80G of Income Tax Act 1961
@@ -43,7 +43,7 @@ export const TaxReceiptModal: React.FC<TaxReceiptModalProps> = ({ isOpen, onClos
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Donor Entity:</span>
-              <span className="font-bold">Royal Palace Banquet</span>
+              <span className="font-bold">Verified Donor</span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Rescued Portions:</span>
@@ -61,7 +61,7 @@ export const TaxReceiptModal: React.FC<TaxReceiptModalProps> = ({ isOpen, onClos
 
           <div className="flex items-center gap-1.5 text-emerald-700 font-sans font-bold text-[10px] pt-1">
             <CheckCircle2 size={13} />
-            <span>Geotagged Chain-of-Custody Verified</span>
+            <span>Direct NGO Handover Verified</span>
           </div>
         </div>
 

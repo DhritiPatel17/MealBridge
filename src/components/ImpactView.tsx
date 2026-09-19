@@ -121,7 +121,7 @@ export const ImpactView: React.FC<ImpactViewProps> = ({ stats, onDownload80G }) 
         </div>
 
         <p className="text-xs text-stone-600 leading-relaxed font-normal">
-          All surplus donations routed through MealBridge carry an FSSAI-compliant digital temperature audit and an eligible Income Tax 80G CSR receipt.
+          All surplus donations routed through MealBridge follow safe food recovery guidelines and carry an eligible Income Tax 80G CSR receipt.
         </p>
 
         <button
@@ -133,34 +133,7 @@ export const ImpactView: React.FC<ImpactViewProps> = ({ stats, onDownload80G }) 
         </button>
       </div>
 
-      {/* Network Partners */}
-      <div className="bg-white border border-stone-200 rounded-3xl p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black uppercase tracking-wider text-stone-900">
-            VERIFIED RESCUE ALLIANCES
-          </h3>
-          <ShieldCheck size={16} className="text-emerald-600" />
-        </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="p-3 bg-stone-50 rounded-2xl border border-stone-100">
-            <div className="font-bold text-stone-900">Feeding India</div>
-            <div className="text-[11px] text-stone-500 mt-0.5">34 Active Vehicles</div>
-          </div>
-          <div className="p-3 bg-stone-50 rounded-2xl border border-stone-100">
-            <div className="font-bold text-stone-900">Robin Hood Army</div>
-            <div className="text-[11px] text-stone-500 mt-0.5">180+ Green Sevaks</div>
-          </div>
-          <div className="p-3 bg-stone-50 rounded-2xl border border-stone-100">
-            <div className="font-bold text-stone-900">Roti Bank Network</div>
-            <div className="text-[11px] text-stone-500 mt-0.5">42 Distribution Centers</div>
-          </div>
-          <div className="p-3 bg-stone-50 rounded-2xl border border-stone-100">
-            <div className="font-bold text-stone-900">Local Nagar Nigams</div>
-            <div className="text-[11px] text-stone-500 mt-0.5">Municipal Sanitization</div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

@@ -1,207 +1,334 @@
-import React, { useState } from 'react';
-import { FoodCategory, PerishabilityState, PackagingFormat, DonationOrder } from '../types';
+import React, { useState, useEffect } from 'react';
+import { FoodCategory, PerishabilityState, DonationOrder } from '../types';
+import { UserProfile } from './auth/AuthPortal';
+import { FOOD_SAFETY_RULES, PACKING_OPTIONS } from '../config/foodSafetyConfig';
 import {
-  RotateCcw,
-  Utensils,
-  Leaf,
-  Fish,
-  Sandwich,
-  Minus,
-  Plus,
-  Scale,
-  Sparkles,
-  Clock,
-  MapPin,
-  Camera,
-  Check,
-  Building,
-  UploadCloud,
-} from 'lucide-react';
+  getCookedDateTime,
+  getSafeUntilDateTime,
+} from '../utils/timeValidation';
+import { LocationPicker } from './common/LocationPicker';
+import donorHeaderWebp from '../assets/donor-header.webp';
 
 interface DonateViewProps {
   onPostSurplus: (order: Partial<DonationOrder>) => void;
-  onOpenTemplateSelector: () => void;
-  onChangePickupLocation: () => void;
-  onChangeSafetyWindow: () => void;
-  onRetakePhoto: () => void;
+  currentUser?: UserProfile | null;
 }
 
 export const DonateView: React.FC<DonateViewProps> = ({
   onPostSurplus,
-  onOpenTemplateSelector,
-  onChangePickupLocation,
-  onChangeSafetyWindow,
-  onRetakePhoto,
+  currentUser,
 }) => {
   const [category, setCategory] = useState<FoodCategory>('pure-veg');
   const [perishability, setPerishability] = useState<PerishabilityState>('cooked');
-  const [servings, setServings] = useState<number>(85);
-  const [packaging, setPackaging] = useState<PackagingFormat>('containers');
-  const [cookedAtTime, setCookedAtTime] = useState<string>('6:45 PM (Today)');
-  const [safeUntilTime, setSafeUntilTime] = useState<string>('11:30 PM Tonight (~3.5 hrs window)');
-  const [instructions, setInstructions] = useState<string>(
-    'Keep upright, 3 large stainless steel catering tubs. Loading bay accessible via Back Gate #2. Bring a trolley.'
-  );
-  const [saveAsTemplate, setSaveAsTemplate] = useState<boolean>(true);
-  const [photoUrl, setPhotoUrl] = useState<string>(
-    'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80'
-  );
-  const [photoName, setPhotoName] = useState<string>('dal_rice_batch4.jpg');
+  const [servings, setServings] = useState<number>(50);
+  const [note, setNote] = useState<string>('');
 
-  // Dynamically calculate estimated net mass (~0.335 kg per serving)
-  const netMass = (servings * 0.335).toFixed(1);
+  // Food storage condition (Required for Cooked Food and Dairy)
+  const [foodStorage, setFoodStorage] = useState<string>('');
+  const storageOptions = [
+    'Hot / गरम',
+    'Room temperature / सामान्य तापमान',
+    'Fridge / फ्रिज में',
+  ];
+
+  // When cooked state (starts empty, no default current time)
+  const [cookHour, setCookHour] = useState<number | ''>('');
+  const [cookMinute, setCookMinute] = useState<string>('');
+  const [cookAmPm, setCookAmPm] = useState<'AM' | 'PM' | ''>('');
+  const [expiryDatePack, setExpiryDatePack] = useState<string>('');
+
+  // Safe to eat for how long state
+  const currentRule = FOOD_SAFETY_RULES[perishability] || FOOD_SAFETY_RULES.cooked;
+  const [durationValue, setDurationValue] = useState<number>(currentRule.defaultDuration);
+  const [durationUnit, setDurationUnit] = useState<'Minutes' | 'Hours' | 'Days'>(currentRule.defaultUnit);
+
+  // Packing multi-select state
+  const [selectedPackings, setSelectedPackings] = useState<string[]>(['Tiffin / Lunch box / टिफिन']);
+  const [otherPackingText, setOtherPackingText] = useState<string>('');
+
+  // Pickup Details state (starts completely empty, no auto-fill)
+  const [contactPerson, setContactPerson] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [phoneTouched, setPhoneTouched] = useState<boolean>(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState<boolean>(false);
+  const [pickupAddress, setPickupAddress] = useState<string>('');
+  const [landmark, setLandmark] = useState<string>('');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+
+  // Confirmation checkbox
+  const [confirmedSafe, setConfirmedSafe] = useState<boolean>(false);
+  const [headerImgFailed, setHeaderImgFailed] = useState<boolean>(false);
+
+  // Update defaults when perishability changes
+  useEffect(() => {
+    const rule = FOOD_SAFETY_RULES[perishability] || FOOD_SAFETY_RULES.cooked;
+    setDurationUnit(rule.defaultUnit);
+    setDurationValue(rule.defaultDuration);
+  }, [perishability]);
+
+  const totalKg = (isNaN(servings) || servings < 1 ? 1 : servings) * 0.35;
+  const weightDisplay = totalKg >= 1000 
+    ? `${(totalKg / 1000).toFixed(1)} tonnes` 
+    : `${totalKg.toFixed(1)} kg`;
+
+  const maxHoursAllowed = currentRule.maxHours;
+  const getEnteredHours = () => {
+    if (durationUnit === 'Minutes') return (durationValue || 0) / 60;
+    if (durationUnit === 'Hours') return durationValue || 0;
+    if (durationUnit === 'Days') return (durationValue || 0) * 24;
+    return 0;
+  };
+
+  const enteredHours = getEnteredHours();
+  const isExceedingLimit = perishability !== 'packaged' && enteredHours > maxHoursAllowed;
+  const maxAllowedLabel = currentRule.maxHours >= 24 
+    ? `${currentRule.maxHours / 24} days` 
+    : `${currentRule.maxHours} hours`;
+
+  // Cooked date evaluation (assumes today; rolls back to yesterday if in future)
+  const cookedResult = getCookedDateTime(cookHour, cookMinute, cookAmPm);
+  const cookedDateObj = cookedResult.date;
+  const isCookedMoreThan12HoursAgo = cookedResult.isMoreThan12HoursAgo;
+
+  const isCookedFilled = perishability === 'packaged' 
+    ? !!expiryDatePack 
+    : (cookHour !== '' && cookMinute !== '' && cookAmPm !== '');
+  const isCookedValid = perishability === 'packaged' 
+    ? !!expiryDatePack 
+    : (isCookedFilled && !isCookedMoreThan12HoursAgo);
+
+  // Safe-until date object
+  const safeUntilD = getSafeUntilDateTime(
+    perishability,
+    cookedDateObj,
+    durationValue,
+    durationUnit,
+    expiryDatePack
+  );
+
+  const isSafeTimeFilled = perishability === 'packaged' ? true : durationValue > 0;
+
+  // Food safety check: block submit only if the safe time is already over
+  const isSafeTimeOver = isCookedValid && isSafeTimeFilled && !isExceedingLimit && Date.now() >= safeUntilD.getTime();
+
+  const getEatBeforeString = () => {
+    if (perishability === 'packaged') {
+      return `Use before expiry date: ${expiryDatePack} / एक्सपायरी तारीख तक`;
+    }
+    const timeStr = safeUntilD.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `Eat before: ${timeStr}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setPhone(val);
+  };
+
+  const isPhoneFilledValid = phone.length === 10;
+  const isPhoneLengthWrong = phone.length !== 10;
+  const showPhoneError = (phoneTouched || hasAttemptedSubmit) && isPhoneLengthWrong;
+
+  const isStorageValid = (perishability !== 'cooked' && perishability !== 'dairy') || !!foodStorage;
+  const isLocationValid = typeof latitude === 'number' && typeof longitude === 'number' && !isNaN(latitude) && !isNaN(longitude);
+
+  const isFormValid = 
+    contactPerson.trim() !== '' && 
+    isPhoneFilledValid && 
+    pickupAddress.trim() !== '' && 
+    isLocationValid &&
+    isStorageValid &&
+    isCookedValid &&
+    !isExceedingLimit &&
+    !isSafeTimeOver &&
+    confirmedSafe;
 
   const handleDecrement = () => {
-    if (servings > 5) setServings((prev) => prev - 5);
+    setServings((prev) => Math.max(1, (prev || 1) - 1));
   };
 
   const handleIncrement = () => {
-    setServings((prev) => prev + 5);
+    setServings((prev) => (prev || 0) + 1);
+  };
+
+  const handleServingsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '') {
+      setServings('' as any);
+      return;
+    }
+    const num = parseInt(val.replace(/\D/g, ''), 10);
+    if (!isNaN(num)) {
+      setServings(num);
+    }
+  };
+
+  const handleBlur = () => {
+    if (!servings || servings < 1) {
+      setServings(1);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setHasAttemptedSubmit(true);
+    if (!isFormValid) return;
+
+    const finalServings = isNaN(servings) || servings < 1 ? 1 : servings;
+    const cookedAtFormatted = perishability === 'packaged' 
+      ? `Expires: ${expiryDatePack}` 
+      : `${cookHour}:${cookMinute} ${cookAmPm}`;
+    
+    const packingListStr = selectedPackings.includes('Other / दूसरा') && otherPackingText.trim()
+      ? selectedPackings.map(p => p.includes('Other') ? otherPackingText.trim() : p.split('/')[0].trim()).join(', ')
+      : selectedPackings.map(p => p.split('/')[0].trim()).join(', ');
+
+    const safeDateObj = safeUntilD;
+    const safeUntilTimestamp = safeDateObj.getTime();
+    const area = pickupAddress.split(',')[0].trim() || 'Central Delhi';
+    const businessName = currentUser?.businessName || (contactPerson ? `${contactPerson}'s Kitchen` : 'Taj Caterers & Kitchen');
+
     onPostSurplus({
       category,
       perishability,
-      servings,
-      netMassKg: parseFloat(netMass),
-      packaging,
-      cookedAt: cookedAtTime,
-      specialInstructions: instructions,
-      photoUrl,
-      photoFilename: photoName,
-    });
+      servings: finalServings,
+      netMassKg: parseFloat((finalServings * 0.35).toFixed(1)),
+      packaging: 'containers',
+      cookedAt: cookedAtFormatted,
+      safeUntil: getEatBeforeString(),
+      safeUntilTimestamp,
+      packingTypes: selectedPackings.map(p => p.includes('Other') && otherPackingText ? otherPackingText : p),
+      specialInstructions: `${note} | Storage: ${foodStorage} | Packing: ${packingListStr} ${landmark ? `| Landmark: ${landmark}` : ''}`,
+      donorAddress: pickupAddress,
+      donorPhone: `+91 ${phone}`,
+      donorName: contactPerson,
+      donorBusinessName: businessName,
+      donorArea: area,
+      latitude: latitude ?? undefined,
+      longitude: longitude ?? undefined,
+      landmark: landmark ? landmark.trim() : undefined,
+      donorNote: note.trim() || undefined,
+      status: 'reported',
+      currentStep: 2,
+      stepPercentage: 40,
+    } as any);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 pb-16">
-      {/* Subheader with Status & Template button */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping inline-block" />
-          <span className="text-xs font-extrabold uppercase tracking-wider text-rose-700">
-            LIVE DONOR HUB
-          </span>
-        </div>
+    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-5 pb-16">
+      {/* Top Header Panel with Background Image */}
+      <div
+        className={`relative rounded-3xl overflow-hidden border border-stone-200/80 shadow-xs transition-colors min-h-[140px] flex flex-col justify-center ${
+          headerImgFailed ? 'bg-[#132238]' : 'bg-[#132238]'
+        }`}
+      >
+        {!headerImgFailed && (
+          <>
+            <img
+              src={donorHeaderWebp}
+              alt="Hands passing a bowl of food, with a steel pot on the left"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setHeaderImgFailed(true)}
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              style={{ objectPosition: 'right center' }}
+            />
+            {/* White overlay for readability: soft gradient with white on left for text readability, photo clearly visible on the right */}
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/95 via-white/80 to-white/20 sm:to-transparent" />
+          </>
+        )}
 
-        <button
-          type="button"
-          onClick={onOpenTemplateSelector}
-          className="flex items-center gap-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold px-3 py-1.5 rounded-full border border-stone-300 transition-colors cursor-pointer"
-        >
-          <RotateCcw size={13} />
-          <span>Load Template</span>
-        </button>
-      </div>
-
-      {/* Screen Title */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-black text-stone-900 tracking-tight">
-          Daan Karein / दान करें
-        </h1>
-        <p className="text-xs text-stone-600">
-          Broadcast surplus fresh meals to verified relief kitchens within 8 km.
-        </p>
-      </div>
-
-      {/* 1. Food Details / विवरण */}
-      <div className="bg-white border border-stone-200 rounded-3xl p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Utensils size={18} className="text-stone-800" />
-            <h2 className="text-sm font-black text-stone-900 tracking-wide">
-              1. Food Details / विवरण
-            </h2>
+        {/* Header Text Content */}
+        <div className="relative z-10 px-5 sm:px-6 py-6 space-y-1 max-w-[85%] sm:max-w-[70%]">
+          <div>
+            <span
+              className={`text-xs font-extrabold uppercase tracking-wider ${
+                headerImgFailed ? 'text-[#ACC8E5]' : 'text-[#112A46]'
+              }`}
+            >
+              Live Donor Hub
+            </span>
           </div>
-          <span className="text-[11px] font-bold text-sky-800">
+          <h1
+            className={`text-2xl font-black tracking-tight ${
+              headerImgFailed ? 'text-white' : 'text-[#112A46]'
+            }`}
+          >
+            Daan Karein / दान करें
+          </h1>
+          <p
+            className={`text-xs font-medium ${
+              headerImgFailed ? 'text-stone-300' : 'text-stone-700'
+            }`}
+          >
+            Share your extra food with NGOs near you.
+          </p>
+        </div>
+      </div>
+
+      {/* 1. Food Details / भोजन विवरण */}
+      <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-[#112A46] tracking-wide">
+              1. Food Details / भोजन विवरण
+            </h2>
+            <div className="w-10 h-1 bg-[#FDFD96] rounded-full mt-1" />
+          </div>
+          <span className="text-[11px] font-bold text-[#112A46]/70">
             Required *
           </span>
         </div>
 
-        {/* Category: 3 Cards */}
+        {/* Veg or Non-Veg */}
         <div className="space-y-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-            CATEGORY / भोजन का प्रकार
+          <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+            VEG OR NON-VEG / शाकाहारी या मांसाहारी
           </span>
           <div className="grid grid-cols-3 gap-2.5">
-            {/* Pure Veg */}
-            <button
-              type="button"
-              onClick={() => setCategory('pure-veg')}
-              className={`p-3 rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
-                category === 'pure-veg'
-                  ? 'bg-[#132238] text-white shadow-sm ring-2 ring-[#132238]'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              <Leaf
-                size={22}
-                className={category === 'pure-veg' ? 'text-amber-300 fill-amber-300' : 'text-stone-600'}
-              />
-              <span className="text-xs font-bold mt-1.5">Pure Veg</span>
-              <span className="text-[10px] opacity-80 font-medium">शाकाहारी</span>
-            </button>
-
-            {/* Non-Veg */}
-            <button
-              type="button"
-              onClick={() => setCategory('non-veg')}
-              className={`p-3 rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
-                category === 'non-veg'
-                  ? 'bg-[#132238] text-white shadow-sm ring-2 ring-[#132238]'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              <Fish
-                size={22}
-                className={category === 'non-veg' ? 'text-rose-400' : 'text-stone-600'}
-              />
-              <span className="text-xs font-bold mt-1.5">Non-Veg</span>
-              <span className="text-[10px] opacity-80 font-medium">मांसाहारी</span>
-            </button>
-
-            {/* Mixed */}
-            <button
-              type="button"
-              onClick={() => setCategory('mixed')}
-              className={`p-3 rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
-                category === 'mixed'
-                  ? 'bg-[#132238] text-white shadow-sm ring-2 ring-[#132238]'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              <Sandwich
-                size={22}
-                className={category === 'mixed' ? 'text-amber-300' : 'text-stone-600'}
-              />
-              <span className="text-xs font-bold mt-1.5">Mixed</span>
-              <span className="text-[10px] opacity-80 font-medium">मिश्रित</span>
-            </button>
+            {[
+              { id: 'pure-veg', label: 'Pure Veg', hi: 'शाकाहारी' },
+              { id: 'non-veg', label: 'Non-Veg', hi: 'मांसाहारी' },
+              { id: 'mixed', label: 'Mixed', hi: 'मिश्रित' },
+            ].map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCategory(c.id as FoodCategory)}
+                className={`p-3 rounded-[12px] flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
+                  category === c.id
+                    ? 'bg-[#FDFD96] text-black border border-[#E3E36B] font-bold shadow-xs'
+                    : 'bg-stone-50 text-stone-700 hover:bg-stone-100 border border-stone-200 font-medium'
+                }`}
+              >
+                <span className="text-xs font-bold">{c.label}</span>
+                <span className="text-[10px] opacity-80 font-medium">{c.hi}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Perishability State */}
+        {/* Type of Food */}
         <div className="space-y-2 pt-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-            PERISHABILITY STATE / भोजन की प्रकृति
+          <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+            TYPE OF FOOD / खाने का प्रकार
           </span>
           <div className="flex flex-wrap gap-2">
             {[
-              { id: 'cooked', label: 'Cooked Meals / पक्का खाना' },
-              { id: 'dairy', label: 'Dairy / दुग्ध' },
+              { id: 'cooked', label: 'Cooked Food / पका हुआ खाना' },
+              { id: 'dairy', label: 'Dairy / दूध से बना' },
               { id: 'bakery', label: 'Bakery / बेकरी' },
-              { id: 'packaged', label: 'Packaged / पैकेट' },
-              { id: 'raw', label: 'Raw Grain / अनाज' },
+              { id: 'packaged', label: 'Packed / पैकेट वाला' },
+              { id: 'raw', label: 'Raw / कच्चा सामान' },
             ].map((state) => (
               <button
                 key={state.id}
                 type="button"
                 onClick={() => setPerishability(state.id as PerishabilityState)}
-                className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer ${
+                className={`text-xs px-3 py-1.5 rounded-[10px] transition-all cursor-pointer ${
                   perishability === state.id
-                    ? 'bg-[#132238] text-white shadow-xs'
-                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                    ? 'bg-[#FDFD96] text-black border border-[#E3E36B] shadow-xs font-bold'
+                    : 'bg-stone-50 text-stone-700 hover:bg-stone-100 border border-stone-200 font-medium'
                 }`}
               >
                 {state.label}
@@ -209,301 +336,507 @@ export const DonateView: React.FC<DonateViewProps> = ({
             ))}
           </div>
         </div>
-      </div>
 
-      {/* 2. Quantity & Servings / मात्रा */}
-      <div className="bg-white border border-stone-200 rounded-3xl p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base">👥</span>
-            <h2 className="text-sm font-black text-stone-900 tracking-wide">
-              2. Quantity & Servings / मात्रा
-            </h2>
-          </div>
-          <span className="text-[11px] font-bold text-sky-800">
-            Feeds How Many?
-          </span>
-        </div>
-
-        {/* Servings Stepper */}
-        <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={handleDecrement}
-            className="w-11 h-11 rounded-full bg-stone-200/80 hover:bg-stone-300 flex items-center justify-center text-stone-700 transition-colors cursor-pointer active:scale-95"
-          >
-            <Minus size={20} />
-          </button>
-
-          <div className="text-center">
-            <div className="text-3xl font-black text-stone-900">
-              {servings} <span className="text-lg font-bold text-stone-700">Persons</span>
-            </div>
-            <div className="text-xs text-stone-500 font-medium mt-0.5">
-              लगभग {servings} व्यक्ति आहार
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleIncrement}
-            className="w-11 h-11 rounded-full bg-[#132238] hover:bg-slate-800 flex items-center justify-center text-white transition-colors cursor-pointer active:scale-95 shadow-xs"
-          >
-            <Plus size={20} />
-          </button>
-        </div>
-
-        {/* Estimated Mass */}
-        <div className="flex items-center justify-between text-xs text-stone-600 px-1">
-          <div className="flex items-center gap-1.5 font-medium">
-            <Scale size={15} className="text-stone-500" />
-            <span>Estimated Net Mass:</span>
-          </div>
-          <span className="font-extrabold text-stone-900 text-sm">
-            ~{netMass} kg
-          </span>
-        </div>
-      </div>
-
-      {/* 3. Consumption Window & Timing */}
-      <div className="bg-white border border-stone-200 rounded-3xl p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock size={18} className="text-stone-800" />
-            <h2 className="text-sm font-black text-stone-900 tracking-wide">
-              3. Consumption Window & Timing
-            </h2>
-          </div>
-          <span className="text-[11px] font-bold text-sky-800">
-            Quality Check
-          </span>
-        </div>
-
-        {/* Gemini Safety Advisory Card */}
-        <div className="bg-sky-50 border border-sky-100 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-sky-900">
-              <Sparkles size={14} className="text-sky-700" />
-              <span className="text-[11px] font-black uppercase tracking-wider">
-                GEMINI SAFETY ADVISORY
+        {/* How is the food kept now? (Required for Cooked and Dairy) */}
+        {(perishability === 'cooked' || perishability === 'dairy') && (
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+                How is the food kept now?
+              </span>
+              <span className="text-[11px] text-stone-600 font-medium">
+                खाना अभी कैसे रखा है?
               </span>
             </div>
-            <span className="text-[11px] font-bold text-stone-600">
-              Ambient: 26°C
+            <div className="grid grid-cols-3 gap-2">
+              {storageOptions.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setFoodStorage(opt)}
+                  className={`py-2 px-2 rounded-[10px] text-xs transition-all cursor-pointer text-center ${
+                    foodStorage === opt
+                      ? 'bg-[#FDFD96] text-black border border-[#E3E36B] shadow-xs font-bold'
+                      : 'bg-stone-50 text-stone-700 hover:bg-stone-100 border border-stone-200 font-medium'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* When was it cooked? / खाना कब बना था? */}
+        {perishability === 'packaged' ? (
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+                Expiry date on the pack
+              </span>
+              <span className="text-[11px] text-stone-600 font-medium">
+                पैकेट पर एक्सपायरी तारीख
+              </span>
+            </div>
+            <input
+              type="date"
+              required
+              autoComplete="off"
+              value={expiryDatePack}
+              onChange={(e) => setExpiryDatePack(e.target.value)}
+              className="w-full bg-stone-50 border border-stone-200 rounded-[10px] px-4 py-2.5 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#112A46]"
+            />
+          </div>
+        ) : (
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+                When was it cooked?
+              </span>
+              <span className="text-[11px] text-stone-600 font-medium">
+                खाना कब बना था?
+              </span>
+            </div>
+            
+            <div className="bg-stone-50 border border-stone-200 rounded-[12px] p-3.5 space-y-3">
+              {/* 3 Columns: Hour, Minute, AM/PM (starts empty, no default time) */}
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-stone-600 uppercase mb-1">Hour (1-12)</label>
+                  <select
+                    value={cookHour}
+                    onChange={(e) => setCookHour(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full bg-white border border-stone-200 rounded-[10px] px-2.5 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-[#112A46] cursor-pointer"
+                  >
+                    <option value="">Hour</option>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-stone-600 uppercase mb-1">Minute (00-59)</label>
+                  <select
+                    value={cookMinute}
+                    onChange={(e) => setCookMinute(e.target.value)}
+                    className="w-full bg-white border border-stone-200 rounded-[10px] px-2.5 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-[#112A46] cursor-pointer"
+                  >
+                    <option value="">Minute</option>
+                    {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-stone-600 uppercase mb-1">AM / PM</label>
+                  <select
+                    value={cookAmPm}
+                    onChange={(e) => setCookAmPm(e.target.value as 'AM' | 'PM' | '')}
+                    className="w-full bg-white border border-stone-200 rounded-[10px] px-2.5 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-[#112A46] cursor-pointer"
+                  >
+                    <option value="">AM/PM</option>
+                    <option value="AM">AM / सुबह</option>
+                    <option value="PM">PM / शाम</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Error message if cooked more than 12 hours ago */}
+            {isCookedFilled && isCookedMoreThan12HoursAgo && (
+              <div className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded-[10px]">
+                Food cooked more than 12 hours ago can't be donated. / 12 घंटे से पुराना खाना दान नहीं किया जा सकता।
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Safe to eat for how long? / कितनी देर तक खाने लायक रहेगा? */}
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              Safe to eat for how long?
+            </span>
+            <span className="text-[11px] text-stone-600 font-medium">
+              कितनी देर तक खाने लायक रहेगा?
             </span>
           </div>
 
-          <p className="text-xs font-bold text-sky-950 leading-relaxed">
-            Recommended safe distribution until {safeUntilTime}.
+          {perishability === 'packaged' ? (
+            <div className="bg-stone-50 border border-stone-200 rounded-[12px] p-3.5 text-xs text-stone-700 font-medium">
+              Packed food remains safe until the printed expiry date on the pack.
+            </div>
+          ) : (
+            <div className="bg-stone-50 border border-stone-200 rounded-[12px] p-3.5 space-y-2.5">
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  autoComplete="off"
+                  value={durationValue}
+                  onChange={(e) => setDurationValue(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="flex-1 bg-white border border-stone-200 rounded-[10px] px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-[#112A46]"
+                />
+                <select
+                  value={durationUnit}
+                  onChange={(e) => setDurationUnit(e.target.value as any)}
+                  className="w-32 bg-white border border-stone-200 rounded-[10px] px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-[#112A46] cursor-pointer"
+                >
+                  {currentRule.unitChoices.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit === 'Minutes' && 'Minutes / मिनट'}
+                      {unit === 'Hours' && 'Hours / घंटे'}
+                      {unit === 'Days' && 'Days / दिन'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {isExceedingLimit && (
+                <div className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded-[10px]">
+                  For this food type, the maximum allowed is {maxAllowedLabel}. Please enter {maxAllowedLabel} or less.
+                </div>
+              )}
+
+              {isSafeTimeOver && (
+                <div className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded-[10px]">
+                  This food is no longer safe to donate. / यह खाना अब दान करने लायक नहीं है।
+                </div>
+              )}
+            </div>
+          )}
+
+          <p className="text-[10px] text-stone-600 italic px-1">
+            Time limits are set by MealBridge for food safety / खाने की सुरक्षा के लिए समय सीमा MealBridge तय करती है.
           </p>
+        </div>
 
-          <div className="flex items-center justify-between pt-1 border-t border-sky-100/80">
-            <span className="text-[11px] text-sky-700">
-              Model tuned for cooked dal/steamed rice
+        {/* How is it packed? / पैकिंग कैसी है? */}
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              How is it packed? (Select all that apply)
             </span>
-            <button
-              type="button"
-              onClick={onChangeSafetyWindow}
-              className="text-[11px] font-extrabold text-sky-900 hover:underline cursor-pointer"
-            >
-              CHANGE WINDOW
-            </button>
+            <span className="text-[11px] text-stone-600 font-medium">
+              पैकिंग कैसी है? (एक या अधिक चुनें)
+            </span>
           </div>
-        </div>
 
-        {/* Packaging Format */}
-        <div className="space-y-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-            PACKAGING FORMAT / पैकिंग
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setPackaging('containers')}
-              className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-                packaging === 'containers'
-                  ? 'bg-[#132238] text-white shadow-xs'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              Containers / पैक
-            </button>
-            <button
-              type="button"
-              onClick={() => setPackaging('loose')}
-              className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-                packaging === 'loose'
-                  ? 'bg-[#132238] text-white shadow-xs'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              Loose / खुला कैटरिंग
-            </button>
+          <div className="flex flex-wrap gap-1.5">
+            {PACKING_OPTIONS.map((opt) => {
+              const isSelected = selectedPackings.includes(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => {
+                    if (isSelected) {
+                      if (selectedPackings.length > 1) {
+                        setSelectedPackings(selectedPackings.filter((p) => p !== opt));
+                      }
+                    } else {
+                      setSelectedPackings([...selectedPackings, opt]);
+                    }
+                  }}
+                  className={`text-xs px-3 py-1.5 rounded-[10px] transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-[#FDFD96] text-black border border-[#E3E36B] shadow-xs font-bold'
+                      : 'bg-stone-50 text-stone-700 hover:bg-stone-100 border border-stone-200 font-medium'
+                  }`}
+                >
+                  <span>{opt}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Cooked At */}
-        <div className="space-y-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-            COOKED AT / पकाने का समय
-          </span>
-          <div className="relative">
+          {selectedPackings.includes('Other / दूसरा') && (
             <input
               type="text"
-              value={cookedAtTime}
-              onChange={(e) => setCookedAtTime(e.target.value)}
-              className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              autoComplete="off"
+              value={otherPackingText}
+              onChange={(e) => setOtherPackingText(e.target.value)}
+              className="w-full bg-stone-50 border border-stone-200 rounded-[10px] px-4 py-2 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-[#112A46] mt-2"
             />
-            <Clock size={16} className="absolute right-3.5 top-3 text-stone-400 pointer-events-none" />
+          )}
+        </div>
+
+        {/* Note */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              Anything NGO should know?
+            </span>
+            <span className="text-[11px] text-stone-600 font-medium text-right">
+              NGO के लिए जरूरी बात (वैकल्पिक)
+            </span>
+          </div>
+          <textarea
+            rows={2}
+            maxLength={200}
+            autoComplete="off"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g. Contains peanuts, very spicy, contains milk / जैसे: मूंगफली है, बहुत तीखा है, दूध से बना है"
+            className="w-full bg-stone-50 border border-stone-200 rounded-[10px] px-4 py-2.5 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#112A46] resize-none"
+          />
+        </div>
+      </div>
+
+      {/* 2. Quantity / मात्रा */}
+      <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-[#112A46] tracking-wide">
+              2. Quantity / मात्रा
+            </h2>
+            <div className="w-10 h-1 bg-[#FDFD96] rounded-full mt-1" />
+          </div>
+          <span className="text-[11px] font-bold text-[#112A46]/70">
+            Required *
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              People
+            </span>
+            <span className="text-[11px] text-stone-600 font-medium">
+              Number of people
+            </span>
+          </div>
+          <div className="bg-stone-50 border border-stone-200 rounded-[12px] p-4 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleDecrement}
+              className="w-10 h-10 rounded-full bg-stone-200/80 hover:bg-stone-300 flex items-center justify-center text-stone-700 transition-colors cursor-pointer active:scale-95 text-lg font-bold"
+            >
+              −
+            </button>
+
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={isNaN(servings) ? '' : servings}
+                  onChange={handleServingsChange}
+                  onBlur={handleBlur}
+                  onFocus={(e) => e.target.select()}
+                  className="w-24 text-center text-2xl font-black text-stone-900 bg-transparent focus:outline-none focus:ring-1 focus:ring-[#112A46] rounded-lg"
+                />
+                <span className="text-base font-black text-stone-800">People</span>
+              </div>
+              <div className="text-xs text-stone-500 font-medium mt-0.5">
+                लगभग {isNaN(servings) || servings < 1 ? 1 : servings} लोगों का आहार
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleIncrement}
+              className="w-10 h-10 rounded-full bg-[#112A46] hover:bg-[#0c1e33] flex items-center justify-center text-white transition-colors cursor-pointer active:scale-95 shadow-xs text-lg font-bold"
+            >
+              +
+            </button>
+          </div>
+          <div className="flex items-center justify-between text-xs text-stone-600 px-1 pt-1">
+            <div className="flex items-center gap-1.5 font-medium">
+              <span>Approx. weight</span>
+            </div>
+            <span className="font-extrabold text-stone-900">
+              ~{weightDisplay}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 4. Handover & Location */}
-      <div className="bg-white border border-stone-200 rounded-3xl p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MapPin size={18} className="text-stone-800" />
-            <h2 className="text-sm font-black text-stone-900 tracking-wide">
-              4. Handover & Location
+      {/* 3. Pickup Details / पिकअप विवरण */}
+      <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-[#112A46] tracking-wide">
+              3. Pickup Details / पिकअप विवरण
             </h2>
+            <div className="w-10 h-1 bg-[#FDFD96] rounded-full mt-1" />
           </div>
-          <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span>Verified</span>
-          </div>
+          {currentUser && (currentUser.fullName || currentUser.address) ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (currentUser.fullName) setContactPerson(currentUser.fullName);
+                if (currentUser.phone) {
+                  const cleaned = currentUser.phone.replace(/\D/g, '');
+                  const last10 = cleaned.slice(-10);
+                  setPhone(last10);
+                }
+                if (currentUser.address) setPickupAddress(currentUser.address);
+                if (typeof currentUser.latitude === 'number' && typeof currentUser.longitude === 'number') {
+                  setLatitude(currentUser.latitude);
+                  setLongitude(currentUser.longitude);
+                }
+              }}
+              className="text-[11px] font-bold text-[#112A46] hover:bg-[#ACC8E5]/40 bg-[#ACC8E5]/20 border border-[#ACC8E5] px-2.5 py-1 rounded-[8px] transition-colors cursor-pointer"
+            >
+              Fill Profile Info / प्रोफ़ाइल से भरें
+            </button>
+          ) : (
+            <span className="text-[11px] font-bold text-[#112A46]/70">
+              Required *
+            </span>
+          )}
         </div>
 
-        {/* Special Instructions */}
+        {/* Contact person name */}
         <div className="space-y-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-            SPECIAL ACCESS INSTRUCTIONS
-          </span>
-          <textarea
-            rows={3}
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            placeholder="e.g., Keep upright, 3 large stainless steel catering tubs. Loading bay accessible via Back Gate #2. Bring a trolley..."
-            className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none leading-relaxed"
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              Contact person name
+            </span>
+            <span className="text-[11px] text-stone-600 font-medium">
+              संपर्क व्यक्ति का नाम
+            </span>
+          </div>
+          <input
+            type="text"
+            required
+            autoComplete="off"
+            value={contactPerson}
+            onChange={(e) => setContactPerson(e.target.value)}
+            className="w-full bg-stone-50 border border-stone-200 rounded-[10px] px-4 py-2.5 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#112A46]"
           />
         </div>
 
-        {/* Visual Proof */}
-        <div className="space-y-2">
+        {/* Phone number */}
+        <div className="space-y-1.5 pt-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-              VISUAL PROOF / फोटो प्रमाण
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              Phone number
             </span>
-            <span className="text-[11px] font-bold text-stone-600">
-              1 Photo Added
+            <span className="text-[11px] text-stone-600 font-medium">
+              फोन नंबर
             </span>
           </div>
-
-          <div className="relative rounded-2xl overflow-hidden border border-stone-200 group">
-            <img
-              src={photoUrl}
-              alt="Food verification"
-              referrerPolicy="no-referrer"
-              className="w-full h-36 object-cover"
+          <div className="flex rounded-[10px] border border-stone-200 bg-stone-50 overflow-hidden focus-within:ring-2 focus-within:ring-[#112A46]">
+            <span className="bg-stone-200 px-3.5 py-2.5 text-xs font-bold text-stone-700 flex items-center border-r border-stone-200">
+              +91
+            </span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              required
+              autoComplete="off"
+              maxLength={10}
+              value={phone}
+              onChange={handlePhoneChange}
+              onBlur={() => setPhoneTouched(true)}
+              className="flex-1 bg-transparent px-3 py-2.5 text-xs font-semibold text-stone-900 focus:outline-none"
             />
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl text-white text-[11px]">
-              <div className="flex items-center gap-1.5 font-medium truncate max-w-[200px]">
-                <UploadCloud size={14} className="shrink-0" />
-                <span className="truncate">{photoName}</span>
-              </div>
-              <button
-                type="button"
-                onClick={onRetakePhoto}
-                className="font-bold text-amber-300 hover:text-amber-200 uppercase tracking-wider cursor-pointer"
-              >
-                RETAKE
-              </button>
-            </div>
           </div>
+          {showPhoneError && (
+            <p className="text-[10px] text-rose-600 font-medium">
+              Please enter a 10-digit mobile number. / कृपया 10 अंकों का मोबाइल नंबर डालें।
+            </p>
+          )}
         </div>
 
-        {/* Pickup Point */}
-        <div className="space-y-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-            PICKUP POINT / पिकअप स्थान
-          </span>
-
-          {/* Mini styled map */}
-          <div className="relative h-28 w-full rounded-2xl overflow-hidden border border-stone-200 bg-sky-100 flex items-center justify-center">
-            {/* Map styling grid graphic */}
-            <div className="absolute inset-0 opacity-40 bg-[linear-gradient(to_right,#cbd5e1_1px,transparent_1px),linear-gradient(to_bottom,#cbd5e1_1px,transparent_1px)] bg-[size:24px_24px]" />
-            <div className="absolute top-4 left-6 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-              Andheri West
-            </div>
-            <div className="absolute bottom-4 right-6 bg-sky-200/80 text-sky-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-              Malad Corridor
-            </div>
-
-            {/* Center Pin */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="bg-[#132238] text-white px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-md">
-                <MapPin size={11} className="text-amber-300 fill-amber-300" />
-                <span>Donation Hub</span>
-              </div>
-              <div className="w-2 h-2 rounded-full bg-[#132238] mt-0.5" />
-            </div>
+        {/* Pickup address */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              Pickup address
+            </span>
+            <span className="text-[11px] text-stone-600 font-medium">
+              पिकअप का पूरा पता
+            </span>
           </div>
+          <input
+            type="text"
+            required
+            autoComplete="off"
+            value={pickupAddress}
+            onChange={(e) => setPickupAddress(e.target.value)}
+            className="w-full bg-stone-50 border border-stone-200 rounded-[10px] px-4 py-2.5 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#112A46]"
+          />
+        </div>
 
-          {/* Address Card */}
-          <div className="bg-stone-50 border border-stone-200 rounded-2xl p-3.5 flex items-center justify-between">
-            <div className="max-w-[75%]">
-              <div className="font-extrabold text-xs text-stone-900 truncate">
-                Royal Palace Banquet &amp; Cante...
-              </div>
-              <div className="text-[11px] text-stone-500 truncate mt-0.5">
-                MG Road, Ward 12 • 19.0760° N, 72.877...
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={onChangePickupLocation}
-              className="text-[11px] font-extrabold text-stone-800 hover:text-black uppercase bg-stone-200/70 hover:bg-stone-300/70 px-2.5 py-1 rounded-lg cursor-pointer"
-            >
-              CHANGE
-            </button>
+        {/* Landmark or gate instructions (Optional) */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+              Landmark or gate instructions (Optional)
+            </span>
+            <span className="text-[11px] text-stone-600 font-medium">
+              पहचान या गेट की जानकारी
+            </span>
           </div>
+          <input
+            type="text"
+            autoComplete="off"
+            value={landmark}
+            onChange={(e) => setLandmark(e.target.value)}
+            className="w-full bg-stone-50 border border-stone-200 rounded-[10px] px-4 py-2.5 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#112A46]"
+          />
+        </div>
+
+        {/* OpenStreetMap Map Location Picker with Draggable Pin & Browser Geolocation */}
+        <div className="pt-2 border-t border-stone-100">
+          <LocationPicker
+            latitude={latitude}
+            longitude={longitude}
+            onChange={(lat, lng) => {
+              setLatitude(lat);
+              setLongitude(lng);
+            }}
+            required={true}
+            hasError={hasAttemptedSubmit && !isLocationValid}
+          />
         </div>
       </div>
 
-      {/* Save as Daily Template Toggle */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
-        <div>
-          <div className="text-xs font-bold text-stone-900">
-            Save as Daily Template
-          </div>
-          <div className="text-[11px] text-stone-500">
-            Fast dispatch auto-fill for tomorrow
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setSaveAsTemplate(!saveAsTemplate)}
-          className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
-            saveAsTemplate ? 'bg-[#132238] text-white' : 'bg-stone-100 border border-stone-300'
-          }`}
-        >
-          {saveAsTemplate && <Check size={16} strokeWidth={3} />}
-        </button>
+      {/* Confirmation Checkbox */}
+      <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-3">
+        <label className="flex items-start gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={confirmedSafe}
+            onChange={(e) => setConfirmedSafe(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-stone-300 text-[#112A46] focus:ring-[#112A46] cursor-pointer shrink-0"
+          />
+          <span className="text-xs text-black font-bold leading-relaxed">
+            I confirm this food is freshly cooked, stored properly and safe to eat. <br />
+            <span className="font-normal text-stone-600">
+              मैं पुष्टि करता/करती हूँ कि यह खाना ताज़ा बना है, सही तरह रखा गया है और खाने लायक है।
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* Primary Submit Button */}
       <div className="space-y-2 pt-1">
         <button
           type="submit"
-          className="w-full bg-[#132238] text-white font-extrabold py-3.5 px-5 rounded-2xl hover:bg-[#1a2d48] transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer group"
+          onClick={() => {
+            if (!isFormValid) {
+              setHasAttemptedSubmit(true);
+            }
+          }}
+          className={`w-full font-bold py-3.5 px-5 rounded-[12px] transition-all flex items-center justify-center gap-2 border ${
+            !isFormValid
+              ? 'bg-stone-200 text-stone-500 border-stone-300 cursor-not-allowed shadow-none'
+              : 'bg-[#112A46] hover:bg-[#0c1e33] active:scale-[0.99] text-white border-[#112A46] cursor-pointer shadow-[0_6px_16px_rgba(17,42,70,0.25)]'
+          }`}
         >
-          <Sparkles size={18} className="text-amber-300 group-hover:rotate-12 transition-transform" />
-          <span className="text-sm tracking-wide">
+          <span className="text-sm tracking-wide font-bold">
             Daan Karein / Post Surplus Food
           </span>
         </button>
-        <p className="text-[11px] text-stone-500 text-center">
-          Instant broadcast to 6 verified NGOs in 8 km corridor • Zero Food Waste
+        <p className="text-[11px] text-[#112A46]/80 text-center font-medium">
+          Instant connection with verified NGOs near you • Zero Food Waste
         </p>
       </div>
     </form>
