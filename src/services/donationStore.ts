@@ -145,6 +145,23 @@ export const donationStore = {
     }
   },
 
+  getOpenDonationsCountForDonor(donorKey: string): number {
+    const donations = this.getDonations();
+    const cleanKey = donorKey.toLowerCase().trim();
+    if (!cleanKey) return 0;
+
+    return donations.filter((d) => {
+      const matchDonor =
+        (d.donorId && d.donorId.toLowerCase().trim() === cleanKey) ||
+        (d.donorName && d.donorName.toLowerCase().trim() === cleanKey) ||
+        (d.donorBusinessName && d.donorBusinessName.toLowerCase().trim() === cleanKey) ||
+        (d.donorPhone && d.donorPhone.replace(/\D/g, '').includes(cleanKey.replace(/\D/g, '')));
+
+      const isOpenStatus = ['waiting', 'accepted', 'picked_up'].includes(d.status);
+      return matchDonor && isOpenStatus;
+    }).length;
+  },
+
   addDonation(
     payload: Omit<DonationRecord, 'id' | 'createdAt' | 'status' | 'expiresAt'> & {
       expiresAt?: number;

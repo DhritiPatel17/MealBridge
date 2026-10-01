@@ -132,9 +132,11 @@ export const RoleProfileView: React.FC<RoleProfileViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-20">
-      {/* Top Header Card */}
-      <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-3 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start pb-20">
+      {/* Left Column: Top Header & Account Details */}
+      <div className="space-y-4">
+        {/* Top Header Card */}
+        <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-3 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-wider text-black">
             Account Details / खाता विवरण
@@ -387,9 +389,12 @@ export const RoleProfileView: React.FC<RoleProfileViewProps> = ({
           )}
         </div>
       </div>
+    </div>
 
-      {/* Logout Action */}
-      <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-2 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
+      {/* Right Column: Session Actions & Privacy / Data Deletion */}
+      <div className="space-y-4">
+        {/* Logout Action */}
+        <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-2 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
         <div>
           <h2 className="text-sm font-bold text-[#112A46]">Session / सत्र</h2>
           <div className="w-10 h-1 bg-[#FDFD96] rounded-full mt-1.5" />
@@ -474,5 +479,6 @@ export const RoleProfileView: React.FC<RoleProfileViewProps> = ({
         )}
       </div>
     </div>
-  );
+  </div>
+);
 };

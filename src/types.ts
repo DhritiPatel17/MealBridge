@@ -7,7 +7,8 @@ export type TabType =
   | 'home'
   | 'claim'
   | 'tracking'
-  | 'impact';
+  | 'impact'
+  | 'admin';
 
 export type FoodCategory = 'pure-veg' | 'non-veg' | 'mixed';
 

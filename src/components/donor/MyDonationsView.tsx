@@ -308,17 +308,23 @@ export const MyDonationsView: React.FC<MyDonationsViewProps> = ({
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Active Donations */}
-          {activeDonations.map((item) => {
-            const isExpanded = expandedId === item.id;
-            const currentRating = ratingStates[item.id] || { stars: 0, comment: '' };
+          {activeDonations.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-sm font-bold text-[#112A46]">
+                Active Donation Requests / सक्रिय दान ({activeDonations.length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                {activeDonations.map((item) => {
+                  const isExpanded = expandedId === item.id;
+                  const currentRating = ratingStates[item.id] || { stars: 0, comment: '' };
 
-            return (
-              <div
-                key={item.id}
-                className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-4 transition-all"
-              >
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-4 transition-all h-full flex flex-col justify-between"
+                    >
                 {/* Header: ID, Date, Category Badge & Status */}
                 <div className="flex items-start justify-between gap-2 border-b border-[#ACC8E5] pb-3">
                   <div>
@@ -606,9 +612,12 @@ export const MyDonationsView: React.FC<MyDonationsViewProps> = ({
                     )}
                   </div>
                 )}
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          )}
 
           {/* ---------------- COMPLETED DONATIONS LIST ---------------- */}
           {completedDonations.length > 0 && (
@@ -620,11 +629,11 @@ export const MyDonationsView: React.FC<MyDonationsViewProps> = ({
                 <div className="w-10 h-1 bg-[#FDFD96] rounded-full mt-1.5" />
               </div>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {completedDonations.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-3 shadow-[0_4px_14px_rgba(17,42,70,0.08)]"
+                    className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-3 shadow-[0_4px_14px_rgba(17,42,70,0.08)] flex flex-col justify-between"
                   >
                     <div className="flex items-start justify-between gap-2 border-b border-[#ACC8E5] pb-2.5">
                       <div>

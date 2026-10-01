@@ -280,7 +280,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen flex justify-center selection:bg-[#FDFD96] relative">
+    <div className="min-h-screen flex flex-col selection:bg-[#FDFD96] relative w-full bg-stone-50/30 text-black">
       {/* Full-screen Fixed Page Gradient Layer behind all content */}
       <div
         className="fixed inset-0 pointer-events-none -z-10"
@@ -296,20 +296,24 @@ export default function App() {
         />
       )}
 
-      {/* Main App Shell (Simulating mobile container) */}
-      <div className="w-full max-w-md min-h-screen relative flex flex-col border-x border-[#ACC8E5]/40 shadow-sm bg-transparent">
+      {/* Main App Shell */}
+      <div className="w-full min-h-screen relative flex flex-col bg-transparent">
         {/* Top Header */}
         <Header
           currentTab={currentTab}
+          onTabChange={handleTabChange}
           onOpenVolunteer={() => {}}
           onOpenProfile={() => handleTabChange('profile')}
           userRole={currentUser?.role}
           onLogout={currentUser ? handleLogout : undefined}
+          pendingRequestsCount={newRequests.length}
+          activePickupsCount={myPickups.filter((p) => p.status === 'accepted' || p.status === 'picked_up').length}
+          myDonationsCount={donorDonations.filter((d) => d.status === 'waiting' || d.status === 'accepted').length}
         />
 
         {/* Floating Toast Notification */}
         {toastMessage && (
-          <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm bg-[#112A46] text-white text-xs font-bold px-4 py-3 rounded-[12px] border border-[#ACC8E5] flex items-center justify-between">
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-[#112A46] text-white text-xs font-bold px-4 py-3 rounded-[12px] border border-[#ACC8E5] flex items-center justify-between shadow-lg">
             <span>{toastMessage}</span>
             <button
               onClick={() => setToastMessage(null)}
@@ -320,8 +324,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Main Content Area: STRICTLY ROLE-BASED */}
-        <main className="flex-1 px-4 pt-3 pb-16">
+        {/* Main Content Area: STRICTLY ROLE-BASED & Max 1200px centered */}
+        <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-20 sm:pb-10">
           {/* Shared Home Page for both roles */}
           {currentTab === 'home' && currentUser && (
             <HomeView

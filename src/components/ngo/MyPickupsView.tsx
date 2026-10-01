@@ -223,9 +223,9 @@ export const MyPickupsView: React.FC<MyPickupsViewProps> = ({
               (item.donorName ? `${item.donorName}'s Kitchen` : 'Food Donor Kitchen');
 
             return (
-              <div key={item.id} className="space-y-3">
-                {/* ---------------- CARD 1: ORDER DETAILS (Always Visible) ---------------- */}
-                <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-4 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
+              <div key={item.id} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start bg-stone-50/50 p-2 sm:p-4 rounded-[20px] border border-[#ACC8E5]/40">
+                {/* ---------------- LEFT COLUMN: ORDER DETAILS (lg:col-span-7) ---------------- */}
+                <div className="lg:col-span-7 bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-4 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
                   {/* Header: Business name & Order ID */}
                   <div className="flex items-start justify-between gap-2 border-b border-[#ACC8E5] pb-3">
                     <div>
@@ -351,8 +351,10 @@ export const MyPickupsView: React.FC<MyPickupsViewProps> = ({
                   )}
                 </div>
 
-                {/* ---------------- CARD 2: STATUS TRACKER (Accepted → Picked up → Delivered) ---------------- */}
-                <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-4 space-y-2.5 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
+                {/* ---------------- RIGHT COLUMN: STATUS & ACTIONS (lg:col-span-5) ---------------- */}
+                <div className="lg:col-span-5 space-y-3">
+                  {/* ---------------- CARD 2: STATUS TRACKER (Accepted → Picked up → Delivered) ---------------- */}
+                  <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-4 space-y-2.5 shadow-[0_4px_14px_rgba(17,42,70,0.08)]">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-black">
                     Status Tracker / स्थिति ट्रैकर
                   </div>
@@ -519,8 +521,9 @@ export const MyPickupsView: React.FC<MyPickupsViewProps> = ({
                   )}
                 </div>
               </div>
-            );
-          })}
+            </div>
+          );
+        })}
 
           {/* ---------------- COMPLETED PICKUPS SECTION ---------------- */}
           {completedPickups.length > 0 && (
@@ -532,11 +535,11 @@ export const MyPickupsView: React.FC<MyPickupsViewProps> = ({
                 <div className="w-10 h-1 bg-[#FDFD96] rounded-full mt-1.5" />
               </div>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {completedPickups.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white border border-[#ACC8E5] rounded-[16px] p-4 space-y-3 shadow-[0_4px_14px_rgba(17,42,70,0.08)]"
+                    className="bg-white border border-[#ACC8E5] rounded-[16px] p-4 space-y-3 shadow-[0_4px_14px_rgba(17,42,70,0.08)] flex flex-col justify-between"
                   >
                     <div className="flex items-start justify-between gap-2 border-b border-[#ACC8E5] pb-2.5">
                       <div>

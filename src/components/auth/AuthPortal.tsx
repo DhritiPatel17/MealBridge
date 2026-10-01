@@ -367,56 +367,111 @@ export function AuthPortal({ onLoginSuccess, onOpenLegal }: AuthPortalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 sm:p-6 md:p-8 font-sans" style={{ background: 'var(--page-gradient, linear-gradient(180deg, #ACC8E5 0%, #DCE8F4 45%, #FFFFFF 100%))' }}>
-      <div className="w-full max-w-lg bg-white border border-[#ACC8E5] rounded-[16px] shadow-[0_4px_14px_rgba(17,42,70,0.08)] overflow-hidden text-stone-900 my-8 mb-16">
-        {/* Header Branding with Logo & Tagline */}
-        <div className="px-6 pt-7 pb-5 bg-white border-b border-[#ACC8E5] flex flex-col items-center text-center w-full">
-          <div className="mb-2.5 flex items-center justify-center w-full">
-            <img
-              src={mealbridgeLogo}
-              alt="MealBridge Logo"
-              className="w-20 h-20 object-contain mx-auto block"
-              style={{ imageRendering: 'auto' }}
-            />
+    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 sm:p-6 md:p-8 font-sans" style={{ background: 'var(--page-gradient, linear-gradient(180deg, #ACC8E5 0%, #DCE8F4 45%, #FFFFFF 100%))' }}>
+      <div className="w-full max-w-lg lg:max-w-4xl bg-white border border-[#ACC8E5] rounded-[20px] shadow-[0_8px_30px_rgba(17,42,70,0.12)] overflow-hidden text-stone-900 my-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
+          {/* Left Brand Panel (Visible on Desktop lg:col-span-5) */}
+          <div className="hidden lg:flex lg:col-span-5 bg-[#112A46] text-white p-8 flex-col justify-between relative overflow-hidden border-r border-[#ACC8E5]/30">
+            {/* Background Accent Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#112A46] via-[#112A46] to-[#0c1e33] pointer-events-none" />
+
+            <div className="relative z-10 space-y-6">
+              {/* Logo in White Rounded Tile */}
+              <div className="w-16 h-16 rounded-[16px] bg-white flex items-center justify-center p-2 shadow-md">
+                <img
+                  src={mealbridgeLogo}
+                  alt="MealBridge Logo"
+                  className="w-full h-full object-contain"
+                  style={{ imageRendering: 'auto' }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <span className="bg-[#ACC8E5]/20 text-[#ACC8E5] border border-[#ACC8E5]/40 text-[10px] font-bold px-2.5 py-1 rounded-[8px] uppercase tracking-wider">
+                  Surplus Food Network
+                </span>
+                <h2 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
+                  MealBridge <br />
+                  <span className="text-[#FDFD96] font-bold text-2xl">अन्नसेतु</span>
+                </h2>
+                <p className="text-xs text-[#ACC8E5] leading-relaxed pt-1">
+                  Connecting hotels, restaurants, banquets, and caterers with verified NGOs to share excess food safely across Vadodara.
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-white/10 text-xs">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-[#FDFD96] text-[#112A46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">✓</div>
+                  <span><strong>10-Minute Acceptance Window:</strong> Instant real-time alerts to nearby verified NGOs.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-[#FDFD96] text-[#112A46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">✓</div>
+                  <span><strong>FSSAI Aligned:</strong> Cooked time limits, safe-to-eat timers, and verified NGO checking.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-[#FDFD96] text-[#112A46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">✓</div>
+                  <span><strong>Proof Photo &amp; Rating:</strong> Transparent delivery tracking with optional proof photo.</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative z-10 pt-6 border-t border-white/10">
+              <p className="text-xs italic text-[#FDFD96] font-semibold text-center">
+                "हर थाली जो बची, किसी की मुस्कान बनी"
+              </p>
+            </div>
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-[#112A46] font-sans">
-            MealBridge <span className="text-[#112A46] font-bold text-base">अन्नसेतु</span>
-          </h1>
-          <p className="text-xs font-medium text-stone-600 mt-0.5">
-            Surplus Food Network • Vadodara / वडोदरा
-          </p>
+          {/* Right Main Form Container (lg:col-span-7) */}
+          <div className="lg:col-span-7 flex flex-col justify-between">
+            {/* Header Branding (Mobile / Tablet Header) */}
+            <div className="px-6 pt-6 pb-4 bg-white border-b border-[#ACC8E5] flex flex-col items-center text-center w-full lg:border-b-0 lg:pt-8">
+              <div className="mb-2 flex items-center justify-center w-full lg:hidden">
+                <img
+                  src={mealbridgeLogo}
+                  alt="MealBridge Logo"
+                  className="w-16 h-16 object-contain mx-auto block"
+                  style={{ imageRendering: 'auto' }}
+                />
+              </div>
 
-          <div className="flex bg-[#ACC8E5]/30 p-1 rounded-[12px] text-xs font-semibold mt-5 border border-[#ACC8E5]">
-            <button
-              onClick={() => {
-                setMode('login');
-                setError(null);
-              }}
-              className={`px-6 py-2 rounded-[10px] transition-all cursor-pointer ${
-                mode === 'login'
-                  ? 'bg-[#112A46] text-white font-bold shadow-xs'
-                  : 'text-[#112A46] hover:bg-white/50 font-bold'
-              }`}
-            >
-              Login / प्रवेश
-            </button>
-            <button
-              onClick={() => {
-                setMode('signup');
-                setStep(1);
-                setError(null);
-              }}
-              className={`px-6 py-2 rounded-[10px] transition-all cursor-pointer ${
-                mode === 'signup'
-                  ? 'bg-[#112A46] text-white font-bold shadow-xs'
-                  : 'text-[#112A46] hover:bg-white/50 font-bold'
-              }`}
-            >
-              Sign Up / नया खाता
-            </button>
-          </div>
-        </div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#112A46] font-sans lg:hidden">
+                MealBridge <span className="text-[#112A46] font-bold text-base">अन्नसेतु</span>
+              </h1>
+              <p className="text-xs font-medium text-stone-600 mt-0.5 lg:hidden">
+                Surplus Food Network • Vadodara / वडोदरा
+              </p>
+
+              <div className="flex bg-[#ACC8E5]/30 p-1 rounded-[12px] text-xs font-semibold mt-2 lg:mt-0 border border-[#ACC8E5] w-full max-w-xs justify-center">
+                <button
+                  onClick={() => {
+                    setMode('login');
+                    setError(null);
+                  }}
+                  className={`flex-1 py-2 rounded-[10px] transition-all cursor-pointer text-center ${
+                    mode === 'login'
+                      ? 'bg-[#112A46] text-white font-bold shadow-xs'
+                      : 'text-[#112A46] hover:bg-white/50 font-bold'
+                  }`}
+                >
+                  Login / प्रवेश
+                </button>
+                <button
+                  onClick={() => {
+                    setMode('signup');
+                    setStep(1);
+                    setError(null);
+                  }}
+                  className={`flex-1 py-2 rounded-[10px] transition-all cursor-pointer text-center ${
+                    mode === 'signup'
+                      ? 'bg-[#112A46] text-white font-bold shadow-xs'
+                      : 'text-[#112A46] hover:bg-white/50 font-bold'
+                  }`}
+                >
+                  Sign Up / नया खाता
+                </button>
+              </div>
+            </div>
 
         {/* Body Container */}
         <div className="p-6 md:p-8">
@@ -988,5 +1043,7 @@ export function AuthPortal({ onLoginSuccess, onOpenLegal }: AuthPortalProps) {
         </div>
       </div>
     </div>
-  );
+  </div>
+</div>
+);
 }

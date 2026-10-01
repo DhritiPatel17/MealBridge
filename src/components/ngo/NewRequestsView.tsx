@@ -145,7 +145,7 @@ export const NewRequestsView: React.FC<NewRequestsViewProps> = ({
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           {activeRequests.map((req) => {
             const businessName =
               req.donorBusinessName ||
@@ -162,7 +162,7 @@ export const NewRequestsView: React.FC<NewRequestsViewProps> = ({
             return (
               <div
                 key={req.id}
-                className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-4 shadow-[0_4px_14px_rgba(17,42,70,0.08)]"
+                className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 space-y-4 shadow-[0_4px_14px_rgba(17,42,70,0.08)] flex flex-col justify-between"
               >
                 {/* TOP: Donor business name (large) & Timer badge */}
                 <div className="flex items-start justify-between gap-3 border-b border-[#ACC8E5] pb-3">

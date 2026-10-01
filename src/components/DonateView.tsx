@@ -215,7 +215,7 @@ export const DonateView: React.FC<DonateViewProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-5 pb-16">
+    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-6 pb-16">
       {/* Top Header Panel with Background Image */}
       <div
         className={`relative rounded-3xl overflow-hidden border border-stone-200/80 shadow-xs transition-colors min-h-[140px] flex flex-col justify-center ${
@@ -233,7 +233,7 @@ export const DonateView: React.FC<DonateViewProps> = ({
               className="absolute inset-0 w-full h-full object-cover pointer-events-none"
               style={{ objectPosition: 'right center' }}
             />
-            {/* White overlay for readability: soft gradient with white on left for text readability, photo clearly visible on the right */}
+            {/* White overlay for readability */}
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/95 via-white/80 to-white/20 sm:to-transparent" />
           </>
         )}
@@ -250,14 +250,14 @@ export const DonateView: React.FC<DonateViewProps> = ({
             </span>
           </div>
           <h1
-            className={`text-2xl font-black tracking-tight ${
+            className={`text-2xl sm:text-3xl font-black tracking-tight ${
               headerImgFailed ? 'text-white' : 'text-[#112A46]'
             }`}
           >
             Daan Karein / दान करें
           </h1>
           <p
-            className={`text-xs font-medium ${
+            className={`text-xs sm:text-sm font-medium ${
               headerImgFailed ? 'text-stone-300' : 'text-stone-700'
             }`}
           >
@@ -266,8 +266,12 @@ export const DonateView: React.FC<DonateViewProps> = ({
         </div>
       </div>
 
-      {/* 1. Food Details / भोजन विवरण */}
-      <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-4">
+      {/* 2-Column Desktop Grid (Left: Max-width 600px Form, Right: Donor Guidelines & Safety Rules) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Form Fields (Max 600px wide) */}
+        <div className="lg:col-span-7 space-y-5 max-w-[600px] w-full">
+          {/* 1. Food Details / भोजन विवरण */}
+          <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-4">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-sm font-bold text-[#112A46] tracking-wide">
@@ -816,28 +820,71 @@ export const DonateView: React.FC<DonateViewProps> = ({
         </label>
       </div>
 
-      {/* Primary Submit Button */}
-      <div className="space-y-2 pt-1">
-        <button
-          type="submit"
-          onClick={() => {
-            if (!isFormValid) {
-              setHasAttemptedSubmit(true);
-            }
-          }}
-          className={`w-full font-bold py-3.5 px-5 rounded-[12px] transition-all flex items-center justify-center gap-2 border ${
-            !isFormValid
-              ? 'bg-stone-200 text-stone-500 border-stone-300 cursor-not-allowed shadow-none'
-              : 'bg-[#112A46] hover:bg-[#0c1e33] active:scale-[0.99] text-white border-[#112A46] cursor-pointer shadow-[0_6px_16px_rgba(17,42,70,0.25)]'
-          }`}
-        >
-          <span className="text-sm tracking-wide font-bold">
-            Daan Karein / Post Surplus Food
-          </span>
-        </button>
-        <p className="text-[11px] text-[#112A46]/80 text-center font-medium">
-          Instant connection with verified NGOs near you • Zero Food Waste
-        </p>
+          {/* Primary Submit Button */}
+          <div className="space-y-2 pt-1">
+            <button
+              type="submit"
+              onClick={() => {
+                if (!isFormValid) {
+                  setHasAttemptedSubmit(true);
+                }
+              }}
+              className={`w-full font-bold py-3.5 px-5 rounded-[12px] transition-all flex items-center justify-center gap-2 border ${
+                !isFormValid
+                  ? 'bg-stone-200 text-stone-500 border-stone-300 cursor-not-allowed shadow-none'
+                  : 'bg-[#112A46] hover:bg-[#0c1e33] active:scale-[0.99] text-white border-[#112A46] cursor-pointer shadow-[0_6px_16px_rgba(17,42,70,0.25)]'
+              }`}
+            >
+              <span className="text-sm tracking-wide font-bold">
+                Daan Karein / Post Surplus Food
+              </span>
+            </button>
+            <p className="text-[11px] text-[#112A46]/80 text-center font-medium">
+              Instant connection with verified NGOs near you • Zero Food Waste
+            </p>
+          </div>
+        </div>
+
+        {/* Right Column: Sticky Donor Safety & Guidelines Panel (Desktop) */}
+        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20">
+          <div className="bg-white border border-[#ACC8E5] rounded-[16px] p-5 shadow-[0_4px_14px_rgba(17,42,70,0.08)] space-y-3.5">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#112A46] block">
+                Food Safety Guidelines / सुरक्षा नियम
+              </span>
+              <h3 className="text-base font-bold text-[#112A46] mt-0.5">
+                FSSAI Aligned Donation Protocol
+              </h3>
+            </div>
+
+            <div className="space-y-3 text-xs text-stone-700">
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-[12px] space-y-1">
+                <p className="font-bold text-[#112A46]">Freshly Cooked &amp; Hygienic</p>
+                <p className="text-stone-600">
+                  Ensure food was prepared within 12 hours. Food must be stored at safe temperatures (hot or refrigerated) prior to pickup.
+                </p>
+              </div>
+
+              <div className="p-3 bg-[#ACC8E5]/20 border border-[#ACC8E5] rounded-[12px] space-y-1">
+                <p className="font-bold text-[#112A46]">10-Minute Acceptance Window</p>
+                <p className="text-stone-600">
+                  MealBridge alerts registered NGOs nearby. The first NGO to accept secures the pickup. If unaccepted in 10 minutes, the request expires.
+                </p>
+              </div>
+
+              <div className="p-3 bg-stone-50 border border-stone-200 rounded-[12px] space-y-1">
+                <p className="font-bold text-stone-900">Proper Packaging</p>
+                <p className="text-stone-600">
+                  Pack food in clean tiffins, covered foil containers, or food-grade bags. Clearly mark allergens or spiciness if any.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-stone-100 text-[11px] text-stone-500 italic text-center">
+              "हर थाली जो बची, किसी की मुस्कान बनी"
+            </div>
+          </div>
+        </div>
       </div>
     </form>
   );

@@ -57,7 +57,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const currentTabs = isNgo ? ngoTabs : donorTabs;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#112A46] text-white border-t border-[#ACC8E5]/30 py-2 px-4 shadow-[0_-4px_16px_rgba(17,42,70,0.15)]">
+    <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#112A46] text-white border-t border-[#ACC8E5]/30 py-2 px-4 shadow-[0_-4px_16px_rgba(17,42,70,0.15)]">
       <div className="max-w-md mx-auto flex items-center justify-between">
         {currentTabs.map((tab) => {
           const Icon = tab.icon;
