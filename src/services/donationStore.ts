@@ -3,9 +3,12 @@ import { supabase } from '../lib/supabase';
 
 export type DonationStatus =
   | 'waiting'
-  | 'accepted'
-  | 'picked_up'
-  | 'delivered'
+  | 'accepted'            // Step 1: NGO accepted
+  | 'on_the_way_pickup'   // Step 2: NGO on the way to pickup
+  | 'reached_donor'       // Step 3: Reached donor location
+  | 'picked_up'           // Step 4: Food picked up
+  | 'on_the_way_delivery' // Step 5: On the way to deliver
+  | 'delivered'           // Step 6: Delivered to community
   | 'cancelled'
   | 'not_accepted'
   | 'expired';
@@ -54,11 +57,27 @@ export interface DonationRecord {
   isNgoVerified?: boolean;
   ngoLatitude?: number;
   ngoLongitude?: number;
+
+  // Step Timestamps (for live tracking timeline)
   acceptedAt?: string;
+  onTheWayPickupAt?: string;
+  reachedDonorAt?: string;
   pickedUpAt?: string;
+  onTheWayDeliveryAt?: string;
   deliveredAt?: string;
+
+  // Proof Photos
+  pickupProofPhoto?: string;
   deliveryProofPhoto?: string;
   ngoDone?: boolean;
+
+  // Live Location & ETA for realtime tracking
+  liveNgoLat?: number;
+  liveNgoLng?: number;
+  liveLocationUpdatedAt?: number;
+  isSimulatingMovement?: boolean;
+  remainingDistanceKm?: number;
+  remainingEtaMinutes?: number;
 
   // Donor rating
   rating?: DonationRating;
@@ -245,42 +264,156 @@ export const donationStore = {
     record.ngoLatitude = ngo.latitude;
     record.ngoLongitude = ngo.longitude;
     record.acceptedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    // Initialize live NGO coordinates (defaulting to NGO address or nearby origin ~2.5km away)
+    if (ngo.latitude && ngo.longitude) {
+      record.liveNgoLat = ngo.latitude;
+      record.liveNgoLng = ngo.longitude;
+    } else if (record.latitude && record.longitude) {
+      record.liveNgoLat = record.latitude + 0.018;
+      record.liveNgoLng = record.longitude - 0.015;
+    } else {
+      record.liveNgoLat = 22.3150;
+      record.liveNgoLng = 73.1650;
+    }
+    record.remainingDistanceKm = record.distanceKm || 2.4;
+    record.remainingEtaMinutes = Math.max(2, Math.ceil((record.remainingDistanceKm || 2.4) * 3));
+    record.liveLocationUpdatedAt = Date.now();
+
     this.saveDonations(donations);
     this.syncDonationToSupabase(record);
     return { success: true };
   },
 
-  markPickedUp(id: string): boolean {
+  // Step 2: NGO starts trip to pickup location
+  startTrip(id: string): boolean {
     const donations = this.getDonations();
     const index = donations.findIndex((d) => d.id === id);
     if (index === -1) return false;
 
-    if (donations[index].status === 'accepted') {
-      donations[index].status = 'picked_up';
-      donations[index].pickedUpAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-      this.saveDonations(donations);
-      this.syncDonationToSupabase(donations[index]);
-      return true;
-    }
-    return false;
+    donations[index].status = 'on_the_way_pickup';
+    donations[index].onTheWayPickupAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    donations[index].liveLocationUpdatedAt = Date.now();
+    this.saveDonations(donations);
+    this.syncDonationToSupabase(donations[index]);
+    return true;
   },
 
-  markDelivered(id: string): boolean {
+  // Step 3: NGO reached donor's pickup spot
+  markReachedDonor(id: string): boolean {
     const donations = this.getDonations();
     const index = donations.findIndex((d) => d.id === id);
     if (index === -1) return false;
 
-    if (donations[index].status === 'picked_up' || donations[index].status === 'accepted') {
-      donations[index].status = 'delivered';
-      donations[index].deliveredAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-      this.saveDonations(donations);
-      this.syncDonationToSupabase(donations[index]);
-      return true;
+    donations[index].status = 'reached_donor';
+    donations[index].reachedDonorAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    if (donations[index].latitude && donations[index].longitude) {
+      donations[index].liveNgoLat = donations[index].latitude;
+      donations[index].liveNgoLng = donations[index].longitude;
     }
-    return false;
+    donations[index].remainingDistanceKm = 0;
+    donations[index].remainingEtaMinutes = 0;
+    donations[index].liveLocationUpdatedAt = Date.now();
+    this.saveDonations(donations);
+    this.syncDonationToSupabase(donations[index]);
+    return true;
   },
 
-  updateProofPhoto(id: string, photoUrl: string): boolean {
+  // Step 4: Food picked up (with required pickup photo proof)
+  markPickedUp(id: string, photoUrl?: string): boolean {
+    const donations = this.getDonations();
+    const index = donations.findIndex((d) => d.id === id);
+    if (index === -1) return false;
+
+    donations[index].status = 'picked_up';
+    donations[index].pickedUpAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    if (photoUrl) {
+      donations[index].pickupProofPhoto = photoUrl;
+    }
+    if (donations[index].latitude && donations[index].longitude) {
+      donations[index].liveNgoLat = donations[index].latitude;
+      donations[index].liveNgoLng = donations[index].longitude;
+    }
+    donations[index].liveLocationUpdatedAt = Date.now();
+    this.saveDonations(donations);
+    this.syncDonationToSupabase(donations[index]);
+    return true;
+  },
+
+  // Step 5: Start trip to distribution center / community
+  startDelivery(id: string): boolean {
+    const donations = this.getDonations();
+    const index = donations.findIndex((d) => d.id === id);
+    if (index === -1) return false;
+
+    donations[index].status = 'on_the_way_delivery';
+    donations[index].onTheWayDeliveryAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    donations[index].remainingDistanceKm = 3.2;
+    donations[index].remainingEtaMinutes = 9;
+    donations[index].liveLocationUpdatedAt = Date.now();
+    this.saveDonations(donations);
+    this.syncDonationToSupabase(donations[index]);
+    return true;
+  },
+
+  // Step 6: Mark delivered with delivery proof photo
+  markDelivered(id: string, photoUrl?: string): boolean {
+    const donations = this.getDonations();
+    const index = donations.findIndex((d) => d.id === id);
+    if (index === -1) return false;
+
+    donations[index].status = 'delivered';
+    donations[index].deliveredAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    if (photoUrl) {
+      donations[index].deliveryProofPhoto = photoUrl;
+    }
+    donations[index].remainingDistanceKm = 0;
+    donations[index].remainingEtaMinutes = 0;
+    donations[index].isSimulatingMovement = false;
+    donations[index].liveLocationUpdatedAt = Date.now();
+    this.saveDonations(donations);
+    this.syncDonationToSupabase(donations[index]);
+    return true;
+  },
+
+  // Update live GPS coordinates of moving NGO vehicle
+  updateLiveLocation(id: string, lat: number, lng: number, distanceKm?: number, etaMinutes?: number): boolean {
+    const donations = this.getDonations();
+    const index = donations.findIndex((d) => d.id === id);
+    if (index === -1) return false;
+
+    donations[index].liveNgoLat = lat;
+    donations[index].liveNgoLng = lng;
+    if (distanceKm !== undefined) donations[index].remainingDistanceKm = distanceKm;
+    if (etaMinutes !== undefined) donations[index].remainingEtaMinutes = etaMinutes;
+    donations[index].liveLocationUpdatedAt = Date.now();
+
+    this.saveDonations(donations);
+    return true;
+  },
+
+  // Toggle movement simulation state
+  setSimulatingMovement(id: string, isSimulating: boolean): boolean {
+    const donations = this.getDonations();
+    const index = donations.findIndex((d) => d.id === id);
+    if (index === -1) return false;
+
+    donations[index].isSimulatingMovement = isSimulating;
+    this.saveDonations(donations);
+    return true;
+  },
+
+  updatePickupProofPhoto(id: string, photoUrl: string): boolean {
+    const donations = this.getDonations();
+    const index = donations.findIndex((d) => d.id === id);
+    if (index === -1) return false;
+
+    donations[index].pickupProofPhoto = photoUrl;
+    this.saveDonations(donations);
+    return true;
+  },
+
+  updateDeliveryProofPhoto(id: string, photoUrl: string): boolean {
     const donations = this.getDonations();
     const index = donations.findIndex((d) => d.id === id);
     if (index === -1) return false;
@@ -288,6 +421,10 @@ export const donationStore = {
     donations[index].deliveryProofPhoto = photoUrl;
     this.saveDonations(donations);
     return true;
+  },
+
+  updateProofPhoto(id: string, photoUrl: string): boolean {
+    return this.updateDeliveryProofPhoto(id, photoUrl);
   },
 
   markNgoDone(id: string): boolean {

@@ -17,9 +17,8 @@ import {
   FileText,
   Award,
 } from 'lucide-react';
-import mealbridgeLogo from '../../assets/mealbridge-logo.png';
 
-export type UserRole = 'donor' | 'ngo';
+export type UserRole = 'donor' | 'ngo' | 'admin';
 
 export interface UserProfile {
   id: string;
@@ -29,6 +28,10 @@ export interface UserProfile {
   phone: string;
   avatarUrl?: string;
   isVerified?: boolean; // Set only if verified; default false
+  verificationStatus?: 'verified' | 'unverified' | 'pending' | 'approved' | 'rejected' | 'blocked';
+  isBlocked?: boolean;
+  strikes?: number;
+  area?: string;
   // Donor specific
   businessName?: string;
   businessType?: string;
@@ -41,8 +44,14 @@ export interface UserProfile {
   // NGO specific
   ngoName?: string;
   regNumber?: string;
+  regCertificateUrl?: string;
   capacity?: string;
   contactPerson?: string;
+  hasVehicle?: boolean;
+  canCarryHotFood?: boolean;
+  hasFridge?: boolean;
+  canReheatFood?: boolean;
+  whoWeServe?: string[];
 }
 
 export const DEMO_DONOR_ACCOUNT: UserProfile & { passwordHash?: string; password: string } = {
@@ -376,12 +385,12 @@ export function AuthPortal({ onLoginSuccess, onOpenLegal }: AuthPortalProps) {
             <div className="absolute inset-0 bg-gradient-to-b from-[#112A46] via-[#112A46] to-[#0c1e33] pointer-events-none" />
 
             <div className="relative z-10 space-y-6">
-              {/* Logo in White Rounded Tile */}
-              <div className="w-16 h-16 rounded-[16px] bg-white flex items-center justify-center p-2 shadow-md">
+              {/* Light badge for perfect visibility on navy panel */}
+              <div className="inline-flex items-center justify-center bg-white px-3 py-2 rounded-[16px] border border-[#ACC8E5]/60 shadow-xs">
                 <img
-                  src={mealbridgeLogo}
+                  src="/logo.jpg.png"
                   alt="MealBridge Logo"
-                  className="w-full h-full object-contain"
+                  className="w-[100px] h-auto object-contain block"
                   style={{ imageRendering: 'auto' }}
                 />
               </div>
@@ -428,9 +437,9 @@ export function AuthPortal({ onLoginSuccess, onOpenLegal }: AuthPortalProps) {
             <div className="px-6 pt-6 pb-4 bg-white border-b border-[#ACC8E5] flex flex-col items-center text-center w-full lg:border-b-0 lg:pt-8">
               <div className="mb-2 flex items-center justify-center w-full lg:hidden">
                 <img
-                  src={mealbridgeLogo}
+                  src="/logo.jpg.png"
                   alt="MealBridge Logo"
-                  className="w-16 h-16 object-contain mx-auto block"
+                  className="w-[100px] sm:w-[110px] h-auto object-contain mx-auto block bg-transparent"
                   style={{ imageRendering: 'auto' }}
                 />
               </div>

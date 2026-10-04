@@ -33,7 +33,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
             {user?.avatarUrl ? (
               <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              <img src="/assets/mealbridge-logo.png" alt="MealBridge Logo" className="w-10 h-10 object-contain" style={{ imageRendering: 'auto' }} />
+              <img src="/logo.jpg.png" alt="MealBridge Logo" className="w-10 h-auto max-h-10 object-contain bg-transparent" style={{ imageRendering: 'auto' }} />
             )}
           </div>
           <div className="flex-1 min-w-0">

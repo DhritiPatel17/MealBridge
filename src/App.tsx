@@ -4,7 +4,7 @@ import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './components/HomeView';
 import { DonateView } from './components/DonateView';
-import { AuthPortal, UserProfile } from './components/auth/AuthPortal';
+import { AuthPortal, UserProfile, UserRole } from './components/auth/AuthPortal';
 import { MyDonationsView } from './components/donor/MyDonationsView';
 import { NewRequestsView } from './components/ngo/NewRequestsView';
 import { MyPickupsView } from './components/ngo/MyPickupsView';
@@ -12,9 +12,19 @@ import { RoleProfileView } from './components/profile/RoleProfileView';
 import { CallModal } from './components/modals/CallModal';
 import { LegalModal, LegalDocType } from './components/legal/LegalModal';
 import { Footer } from './components/common/Footer';
+import { IntroSplash } from './components/common/IntroSplash';
 import { donationStore, DonationRecord } from './services/donationStore';
 
 export default function App() {
+  const [showIntroSplash, setShowIntroSplash] = useState<boolean>(() => {
+    try {
+      const seen = sessionStorage.getItem('mealbridge_intro_seen');
+      return !seen;
+    } catch {
+      return false;
+    }
+  });
+
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
       const stored = localStorage.getItem('mealbridge_active_user');
@@ -81,12 +91,18 @@ export default function App() {
 
   // Route & URL guard logic: Home is shared by both roles
   const validateAndRedirectTab = useCallback(
-    (targetTab: string, role: 'donor' | 'ngo'): TabType => {
+    (targetTab: string, role: UserRole): TabType => {
       const donorAllowed: TabType[] = ['home', 'donate', 'my-donations', 'profile'];
       const ngoAllowed: TabType[] = ['home', 'new-requests', 'my-pickups', 'profile'];
+      const adminAllowed: TabType[] = ['home', 'admin', 'profile'];
 
       if (role === 'donor') {
         if (donorAllowed.includes(targetTab as TabType)) {
+          return targetTab as TabType;
+        }
+        return 'home';
+      } else if (role === 'admin') {
+        if (adminAllowed.includes(targetTab as TabType)) {
           return targetTab as TabType;
         }
         return 'home';
@@ -214,16 +230,40 @@ export default function App() {
     }
   };
 
-  const handleMarkPickedUp = (id: string) => {
-    const success = donationStore.markPickedUp(id);
+  const handleStartTrip = (id: string) => {
+    const success = donationStore.startTrip(id);
+    if (success) {
+      setDonations(donationStore.getDonations());
+      showToast('Trip started! Live location shared with donor.');
+    }
+  };
+
+  const handleReachedPickup = (id: string) => {
+    const success = donationStore.markReachedDonor(id);
+    if (success) {
+      setDonations(donationStore.getDonations());
+      showToast('Reached pickup location! / पिकअप स्थान पर पहुंचे');
+    }
+  };
+
+  const handleMarkPickedUp = (id: string, photoUrl?: string) => {
+    const success = donationStore.markPickedUp(id, photoUrl);
     if (success) {
       setDonations(donationStore.getDonations());
       showToast('Order marked as Picked Up / ले लिया गया!');
     }
   };
 
-  const handleMarkDelivered = (id: string) => {
-    const success = donationStore.markDelivered(id);
+  const handleStartDelivery = (id: string) => {
+    const success = donationStore.startDelivery(id);
+    if (success) {
+      setDonations(donationStore.getDonations());
+      showToast('Delivery trip started! / वितरण के लिए निकल पड़े!');
+    }
+  };
+
+  const handleMarkDelivered = (id: string, photoUrl?: string) => {
+    const success = donationStore.markDelivered(id, photoUrl);
     if (success) {
       setDonations(donationStore.getDonations());
       showToast('Order marked as Delivered / वितरित कर दिया!');
@@ -274,13 +314,23 @@ export default function App() {
   // For NGO:
   // 1. New requests awaiting NGO acceptance (status === 'waiting')
   const newRequests = donations.filter((d) => d.status === 'waiting');
-  // 2. Pickups accepted by NGOs (accepted, picked_up, delivered)
-  const myPickups = donations.filter(
-    (d) => d.status === 'accepted' || d.status === 'picked_up' || d.status === 'delivered'
+  // 2. Pickups accepted by NGOs (accepted, on_the_way_pickup, reached_donor, picked_up, on_the_way_delivery, delivered)
+  const myPickups = donations.filter((d) =>
+    ['accepted', 'on_the_way_pickup', 'reached_donor', 'picked_up', 'on_the_way_delivery', 'delivered'].includes(d.status)
   );
 
+  const handleFinishSplash = useCallback(() => {
+    setShowIntroSplash(false);
+    try {
+      sessionStorage.setItem('mealbridge_intro_seen', 'true');
+    } catch {}
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col selection:bg-[#FDFD96] relative w-full bg-stone-50/30 text-black">
+    <div className="min-h-screen flex flex-col selection:bg-[#FDFD96] relative w-full bg-stone-50/30 text-black overflow-x-hidden">
+      {/* Intro Splash Animation (plays once per session) */}
+      {showIntroSplash && <IntroSplash onFinish={handleFinishSplash} />}
+
       {/* Full-screen Fixed Page Gradient Layer behind all content */}
       <div
         className="fixed inset-0 pointer-events-none -z-10"
@@ -307,8 +357,20 @@ export default function App() {
           userRole={currentUser?.role}
           onLogout={currentUser ? handleLogout : undefined}
           pendingRequestsCount={newRequests.length}
-          activePickupsCount={myPickups.filter((p) => p.status === 'accepted' || p.status === 'picked_up').length}
-          myDonationsCount={donorDonations.filter((d) => d.status === 'waiting' || d.status === 'accepted').length}
+          activePickupsCount={
+            myPickups.filter(
+              (p) =>
+                ['accepted', 'on_the_way_pickup', 'reached_donor', 'picked_up', 'on_the_way_delivery'].includes(p.status) &&
+                !p.ngoDone
+            ).length
+          }
+          myDonationsCount={
+            donorDonations.filter(
+              (d) =>
+                ['waiting', 'accepted', 'on_the_way_pickup', 'reached_donor', 'picked_up', 'on_the_way_delivery'].includes(d.status) &&
+                !d.rating
+            ).length
+          }
         />
 
         {/* Floating Toast Notification */}
@@ -324,8 +386,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Main Content Area: STRICTLY ROLE-BASED & Max 1200px centered */}
-        <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-20 sm:pb-10">
+        {/* Main Content Area: Max 1440px centered with 48px padding on desktop */}
+        <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-4 pb-20 sm:pb-10">
           {/* Shared Home Page for both roles */}
           {currentTab === 'home' && currentUser && (
             <HomeView
@@ -381,7 +443,10 @@ export default function App() {
                 <MyPickupsView
                   pickups={myPickups}
                   currentUser={currentUser}
+                  onStartTrip={handleStartTrip}
+                  onReachedPickup={handleReachedPickup}
                   onMarkPickedUp={handleMarkPickedUp}
+                  onStartDelivery={handleStartDelivery}
                   onMarkDelivered={handleMarkDelivered}
                   onUploadPhoto={handleUploadPhoto}
                   onNgoDone={handleNgoDone}
@@ -411,8 +476,20 @@ export default function App() {
             activeTab={currentTab}
             onTabChange={handleTabChange}
             pendingRequestsCount={newRequests.length}
-            activePickupsCount={myPickups.filter((p) => p.status === 'accepted' || p.status === 'picked_up').length}
-            myDonationsCount={donorDonations.filter((d) => d.status === 'waiting' || d.status === 'accepted').length}
+            activePickupsCount={
+              myPickups.filter(
+                (p) =>
+                  ['accepted', 'on_the_way_pickup', 'reached_donor', 'picked_up', 'on_the_way_delivery'].includes(p.status) &&
+                  !p.ngoDone
+              ).length
+            }
+            myDonationsCount={
+              donorDonations.filter(
+                (d) =>
+                  ['waiting', 'accepted', 'on_the_way_pickup', 'reached_donor', 'picked_up', 'on_the_way_delivery'].includes(d.status) &&
+                  !d.rating
+              ).length
+            }
           />
         )}
 

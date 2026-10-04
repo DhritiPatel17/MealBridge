@@ -2,14 +2,18 @@
 
 :root {
   --color-primary: #112A46;
+  --color-primary-light: #1E4A7A;
   --color-soft: #ACC8E5;
+  --color-soft-light: #E6F0FA;
   --color-accent: #FDFD96;
-  --color-text: #000000;
+  --color-accent-dark: #F5F27A;
+  --color-text-main: #0B1C30;
   --color-white: #FFFFFF;
   --color-bg-ngo: #FAF9DE;
-  --page-gradient: linear-gradient(180deg, #ACC8E5 0%, #DCE8F4 45%, #FFFFFF 100%);
-  --card-shadow: 0 4px 14px rgba(17, 42, 70, 0.08);
-  --cta-shadow: 0 6px 16px rgba(17, 42, 70, 0.25);
+  --page-gradient: linear-gradient(180deg, #F4F8FC 0%, #E2EEF8 50%, #DCE9F5 100%);
+  --card-shadow: 0 4px 20px rgba(17, 42, 70, 0.06);
+  --card-hover-shadow: 0 14px 32px rgba(17, 42, 70, 0.12);
+  --cta-shadow: 0 6px 18px rgba(17, 42, 70, 0.22);
 }
 
 @layer base {
@@ -17,18 +21,234 @@
     min-height: 100%;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-tap-highlight-color: transparent;
     font-weight: 400;
-    color: #000000;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #0B1C30;
     background: var(--page-gradient);
     background-attachment: fixed;
   }
 
-  h1, h2, h3, h4, h5, h6, strong, b, .font-bold, .font-extrabold, .font-black, .font-semibold {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
     font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #112A46;
+  }
+
+  strong, b, .font-bold, .font-extrabold, .font-semibold {
+    color: #0B1C30;
+  }
+}
+
+/* Custom Utilities for Premium Look */
+.font-brand {
+  font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -1px;
+}
+
+.font-rozha {
+  font-family: 'Rozha One', 'Noto Sans Devanagari', serif;
+}
+
+.font-heading {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
+}
+
+.font-body {
+  font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+}
+
+.font-hindi {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+}
+
+/* Gradients */
+.bg-gradient-navy {
+  background: linear-gradient(135deg, #112A46 0%, #1E4A7A 100%);
+}
+
+.bg-gradient-yellow {
+  background: linear-gradient(135deg, #FDFD96 0%, #F5F27A 100%);
+}
+
+.bg-gradient-soft {
+  background: linear-gradient(135deg, #E6F0FA 0%, #ACC8E5 100%);
+}
+
+.text-gradient-navy {
+  background: linear-gradient(135deg, #112A46 0%, #1E4A7A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-marigold {
+  background: linear-gradient(135deg, #F5C518 0%, #E08A00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 1px rgba(17, 42, 70, 0.4));
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(rgba(172, 200, 229, 0.45) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* Card Styling with 20px corners, soft shadow, thin light-blue border */
+.premium-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  border: 1px solid rgba(172, 200, 229, 0.6);
+  box-shadow: 0 4px 20px rgba(17, 42, 70, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(17, 42, 70, 0.5);
+  box-shadow: 0 14px 32px rgba(17, 42, 70, 0.12);
+}
+
+/* Button hover and press scaling */
+.btn-premium {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-premium:hover {
+  transform: scale(1.03);
+}
+
+.btn-premium:active {
+  transform: scale(0.98);
+}
+
+/* Floating animation for hero logo */
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-subtle-float {
+  animation: subtleFloat 4s ease-in-out infinite;
+}
+
+/* Staggered page fade-up animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* NGO Pulse on tracking */
+@keyframes ngoPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(30, 74, 122, 0.5);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 12px rgba(30, 74, 122, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(30, 74, 122, 0);
+  }
+}
+
+.animate-ngo-pulse {
+  animation: ngoPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Hexagon Floating and Rotating Orbit Animations */
+@keyframes hexFloat {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.04);
+  }
+  100% {
+    transform: translateY(4px) scale(0.98);
+  }
+}
+
+@keyframes spinOrbit {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes spinOrbitReverse {
+  from {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+}
+
+.animate-spin-orbit {
+  animation: spinOrbit 45s linear infinite;
+}
+
+.animate-spin-orbit-reverse {
+  animation: spinOrbitReverse 55s linear infinite;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-subtle-float,
+  .animate-ngo-pulse,
+  .animate-fade-up,
+  .animate-spin-orbit,
+  .animate-spin-orbit-reverse {
+    animation: none !important;
+  }
+  .premium-card:hover {
+    transform: none !important;
+  }
+  .btn-premium:hover {
+    transform: none !important;
   }
 }

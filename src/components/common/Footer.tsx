@@ -11,12 +11,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
     <footer className="w-full bg-[#112A46] text-white py-8 px-4 sm:px-6 lg:px-8 mt-12 mb-16 sm:mb-0 border-t border-[#ACC8E5]/30">
       <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
         {/* Left: Logo & Brand */}
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          <div className="w-9 h-9 rounded-[12px] bg-white flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
+        <div className="flex flex-col md:flex-row items-center gap-3.5">
+          {/* Light badge for visibility on navy footer */}
+          <div className="h-[48px] sm:h-[52px] px-2 py-1 rounded-[12px] bg-white border border-[#ACC8E5]/50 shadow-xs flex items-center justify-center shrink-0">
             <img
-              src="/assets/mealbridge-logo.png"
+              src="/logo.jpg.png"
               alt="MealBridge Logo"
-              className="w-full h-full object-contain shrink-0"
+              className="h-full w-auto object-contain shrink-0"
               style={{ imageRendering: 'auto' }}
             />
           </div>

@@ -14,6 +14,7 @@ import {
   Droplet,
   IndianRupee,
 } from 'lucide-react';
+import { CountUp } from './common/CountUp';
 
 interface ImpactViewProps {
   stats: ImpactStats;
@@ -24,87 +25,92 @@ export const ImpactView: React.FC<ImpactViewProps> = ({ stats, onDownload80G }) 
   const [activeRange, setActiveRange] = useState<'month' | 'year' | 'all'>('all');
 
   return (
-    <div className="space-y-5 pb-16">
+    <div className="space-y-6 pb-20 max-w-4xl mx-auto">
       {/* Header Banner */}
-      <div className="space-y-1 pt-1">
-        <div className="flex items-center gap-1.5">
-          <span className="bg-emerald-100 text-emerald-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block">
-            NATIONAL IMPACT LEDGER
+      <div className="space-y-1.5 pt-1 animate-fade-up">
+        <div className="flex items-center gap-2">
+          <span className="bg-gradient-to-r from-[#E6F0FA] to-[#ACC8E5] text-[#112A46] text-xs font-extrabold px-3 py-1 rounded-[8px] uppercase tracking-wider inline-block border border-[#ACC8E5]/50 shadow-2xs">
+            COMMUNITY IMPACT LEDGER
           </span>
         </div>
-        <h1 className="text-2xl font-black text-stone-900 tracking-tight">
-          Surplus Rescue Matrix
+        <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <span className="text-gradient-navy">Surplus Food Rescue Matrix</span>
         </h1>
-        <p className="text-xs text-stone-600">
-          Transparent, verifiable food redistribution footprint across verified relief chapters.
+        <p className="text-sm text-[#0B1C30]/80 font-normal leading-relaxed">
+          Transparent, verifiable surplus food redistribution footprint across verified relief chapters in Vadodara.
         </p>
       </div>
 
       {/* Main Impact Hero Card */}
-      <div className="bg-[#132238] text-white rounded-3xl p-5 shadow-md space-y-4">
+      <div className="bg-gradient-navy text-white rounded-[20px] p-6 sm:p-7 shadow-lg border border-[#ACC8E5]/40 space-y-5 animate-fade-up delay-100">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">
+          <span className="text-xs font-extrabold text-[#ACC8E5] uppercase tracking-wider">
             CUMULATIVE RESCUE
           </span>
-          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
+          <span className="bg-gradient-to-r from-[#FDFD96] to-[#F5F27A] text-[#112A46] font-black text-[11px] px-2.5 py-0.5 rounded-[8px] shadow-2xs">
             +342 Today
           </span>
         </div>
 
         <div>
-          <div className="text-4xl font-black tracking-tight text-white">
-            {stats.mealsSaved.toLocaleString()}
+          <div className="font-heading text-4xl sm:text-5xl font-black tracking-tight text-white">
+            <CountUp end={stats.mealsSaved} duration={1400} />
           </div>
-          <div className="text-xs text-stone-300 mt-0.5">
-            Wholesome meals served to vulnerable citizens
+          <div className="text-sm text-[#ACC8E5] font-medium mt-1">
+            Wholesome meals served to vulnerable citizens across Vadodara
           </div>
         </div>
 
         {/* Environmental & Economic Equivalencies */}
-        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
-          <div className="bg-white/5 rounded-2xl p-2.5 text-center">
-            <TreePine size={16} className="text-emerald-400 mx-auto mb-1" />
-            <div className="font-extrabold text-sm text-white">19.4 T</div>
-            <div className="text-[10px] text-stone-400">CO2 Abated</div>
+        <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/15">
+          <div className="bg-white/10 rounded-[14px] p-3 text-center border border-white/10 backdrop-blur-xs">
+            <TreePine size={18} className="text-[#FDFD96] mx-auto mb-1.5" />
+            <div className="font-heading font-extrabold text-sm sm:text-base text-white">19.4 T</div>
+            <div className="text-[11px] text-[#ACC8E5] font-medium">CO2 Abated</div>
           </div>
 
-          <div className="bg-white/5 rounded-2xl p-2.5 text-center">
-            <Droplet size={16} className="text-sky-400 mx-auto mb-1" />
-            <div className="font-extrabold text-sm text-white">4.2 M L</div>
-            <div className="text-[10px] text-stone-400">Water Saved</div>
+          <div className="bg-white/10 rounded-[14px] p-3 text-center border border-white/10 backdrop-blur-xs">
+            <Droplet size={18} className="text-[#ACC8E5] mx-auto mb-1.5" />
+            <div className="font-heading font-extrabold text-sm sm:text-base text-white">4.2 M L</div>
+            <div className="text-[11px] text-[#ACC8E5] font-medium">Water Saved</div>
           </div>
 
-          <div className="bg-white/5 rounded-2xl p-2.5 text-center">
-            <IndianRupee size={16} className="text-amber-400 mx-auto mb-1" />
-            <div className="font-extrabold text-sm text-white">₹38.6 L</div>
-            <div className="text-[10px] text-stone-400">Value Saved</div>
+          <div className="bg-white/10 rounded-[14px] p-3 text-center border border-white/10 backdrop-blur-xs">
+            <IndianRupee size={18} className="text-[#FDFD96] mx-auto mb-1.5" />
+            <div className="font-heading font-extrabold text-sm sm:text-base text-white">₹38.6 L</div>
+            <div className="text-[11px] text-[#ACC8E5] font-medium">Value Saved</div>
           </div>
         </div>
       </div>
 
       {/* Top Donor Chapters & Leaderboard */}
-      <div className="bg-white border border-stone-200 rounded-3xl p-5 shadow-xs space-y-3.5">
+      <div className="premium-card p-6 space-y-4 animate-fade-up delay-200">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-black uppercase tracking-wider text-stone-900">
-            METRO CORRIDOR DISPATCHES
+          <h2 className="font-heading text-sm font-extrabold uppercase tracking-wider text-[#112A46]">
+            VADODARA CORRIDOR DISPATCHES
           </h2>
-          <span className="text-[11px] font-bold text-stone-500">Live Grid</span>
+          <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-[6px] bg-[#E6F0FA] text-[#112A46]">
+            Live Grid
+          </span>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {[
-            { city: 'Mumbai Ward 12 & Suburbs', count: '18,420 meals', pct: 85, color: 'bg-emerald-600' },
-            { city: 'Delhi NCR South Corridor', count: '14,100 meals', pct: 72, color: 'bg-sky-600' },
-            { city: 'Bengaluru Tech Park Belt', count: '9,250 meals', pct: 60, color: 'bg-amber-600' },
-            { city: 'Hyderabad Cyberabad Hub', count: '6,552 meals', pct: 45, color: 'bg-purple-600' },
+            { city: 'Alkapuri & Old Padra Corridor', count: '18,420 meals', pct: 85 },
+            { city: 'Fatehgunj & Sayajigunj Belt', count: '14,100 meals', pct: 72 },
+            { city: 'Manjalpur & Makarpura Zone', count: '9,250 meals', pct: 60 },
+            { city: 'Gorwa & Subhanpura Hub', count: '6,552 meals', pct: 45 },
           ].map((corridor, idx) => (
-            <div key={idx} className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-stone-800">{corridor.city}</span>
-                <span className="font-extrabold text-stone-900">{corridor.count}</span>
+            <div key={idx} className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="font-bold text-[#112A46]">{corridor.city}</span>
+                <span className="font-extrabold text-[#112A46]">{corridor.count}</span>
               </div>
-              <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
-                <div className={`${corridor.color} h-2 rounded-full`} style={{ width: `${corridor.pct}%` }} />
+              <div className="w-full bg-[#E6F0FA] rounded-full h-2.5 overflow-hidden border border-[#ACC8E5]/40">
+                <div
+                  className="bg-gradient-to-r from-[#112A46] to-[#1E4A7A] h-2.5 rounded-full transition-all duration-700"
+                  style={{ width: `${corridor.pct}%` }}
+                />
               </div>
             </div>
           ))}
@@ -112,28 +118,26 @@ export const ImpactView: React.FC<ImpactViewProps> = ({ stats, onDownload80G }) 
       </div>
 
       {/* 80G Tax Exemption & Digital Audit Receipt */}
-      <div className="bg-stone-50 border border-stone-200 rounded-3xl p-5 shadow-xs space-y-3">
-        <div className="flex items-center gap-2">
-          <FileText size={18} className="text-stone-800" />
-          <h2 className="text-sm font-black text-stone-900">
+      <div className="bg-white rounded-[20px] border border-[#ACC8E5]/60 p-6 shadow-[0_4px_20px_rgba(17,42,70,0.06)] space-y-3.5 animate-fade-up delay-300">
+        <div className="flex items-center gap-2.5">
+          <FileText size={20} className="text-[#112A46]" />
+          <h2 className="font-heading text-base font-extrabold text-[#112A46]">
             FSSAI &amp; 80G Tax Certification
           </h2>
         </div>
 
-        <p className="text-xs text-stone-600 leading-relaxed font-normal">
-          All surplus donations routed through MealBridge follow safe food recovery guidelines and carry an eligible Income Tax 80G CSR receipt.
+        <p className="text-sm text-[#0B1C30]/85 leading-relaxed font-normal">
+          All surplus food donations routed through MealBridge follow safe food recovery guidelines and carry an eligible Income Tax 80G CSR receipt.
         </p>
 
         <button
           onClick={onDownload80G}
-          className="w-full bg-white hover:bg-stone-100 border border-stone-300 text-stone-900 font-extrabold text-xs py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-2xs"
+          className="btn-premium w-full bg-gradient-to-r from-[#112A46] to-[#1E4A7A] hover:opacity-95 text-white font-extrabold text-xs sm:text-sm py-3.5 px-4 rounded-[14px] flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm border border-[#112A46]"
         >
-          <Download size={15} />
+          <Download size={16} />
           <span>Download 80G Compliance Certificate</span>
         </button>
       </div>
-
-
     </div>
   );
 };

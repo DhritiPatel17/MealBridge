@@ -65,40 +65,31 @@ export const Header: React.FC<HeaderProps> = ({
   const navItems = isNgo ? ngoNavItems : donorNavItems;
 
   return (
-    <header className="sticky top-0 z-40 bg-[#112A46] text-white border-b border-[#ACC8E5]/30 px-4 sm:px-6 lg:px-8 py-3 w-full shadow-md">
-      <div className="max-w-[1200px] mx-auto flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 backdrop-blur-md bg-[#112A46]/95 text-white border-b border-[#ACC8E5]/30 px-4 sm:px-6 lg:px-12 py-2.5 sm:py-3 w-full shadow-lg transition-all duration-300">
+      <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-4">
         {/* Zone 1: Logo & Wordmark */}
         <div
           onClick={() => onTabChange('home')}
-          className="flex items-center gap-3 cursor-pointer select-none shrink-0"
+          className="flex items-center gap-3 sm:gap-3.5 cursor-pointer select-none shrink-0 group transition-transform duration-200 hover:scale-[1.02]"
         >
-          <div className="w-10 h-10 rounded-[12px] bg-white flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
-            <img
-              src="/assets/mealbridge-logo.png"
-              alt="MealBridge Logo"
-              className="w-full h-full object-contain shrink-0"
-              style={{ imageRendering: 'auto' }}
-              loading="eager"
-            />
-          </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col justify-center">
             <div className="flex items-center gap-1.5 leading-none">
-              <span className="font-bold tracking-tight text-white text-base sm:text-lg">
+              <span className="font-heading font-bold text-[#FDFD96] text-lg sm:text-xl tracking-tight">
                 MealBridge
               </span>
-              <span className="text-white/40 text-xs">/</span>
-              <span className="font-bold text-[#FDFD96] text-xs sm:text-sm tracking-wide">
+              <span className="text-white/40 text-sm">/</span>
+              <span className="font-hindi font-bold text-[#FDFD96] text-sm sm:text-base tracking-wide">
                 अन्नसेतु
               </span>
             </div>
-            <span className="text-[10px] sm:text-[11px] text-stone-300 font-normal leading-tight mt-0.5">
-              Surplus Food Network - Vadodara
+            <span className="text-[11px] sm:text-xs text-[#ACC8E5] font-medium leading-tight mt-1">
+              Surplus Food Network • Vadodara
             </span>
           </div>
         </div>
 
         {/* Zone 2: Top Navigation Bar for Tablet & Laptop (Hidden on mobile < 640px) */}
-        <nav className="hidden sm:flex items-center gap-1 lg:gap-2">
+        <nav className="hidden sm:flex items-center gap-1.5 lg:gap-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -107,17 +98,17 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-[12px] text-xs lg:text-sm font-bold transition-all cursor-pointer relative ${
+                className={`btn-premium flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 rounded-[14px] text-xs lg:text-sm font-bold transition-all cursor-pointer relative ${
                   isActive
-                    ? 'bg-[#FDFD96] text-[#112A46] shadow-xs'
+                    ? 'bg-gradient-to-r from-[#FDFD96] to-[#F5F27A] text-[#112A46] shadow-sm font-extrabold'
                     : 'text-stone-200 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <Icon size={16} />
+                <Icon size={16} className={isActive ? 'text-[#112A46]' : 'text-stone-200'} />
                 <span className="whitespace-nowrap">{item.label}</span>
                 <span
-                  className={`text-[10px] font-normal hidden lg:inline ${
-                    isActive ? 'text-[#112A46]/80' : 'text-stone-300'
+                  className={`text-[10px] font-semibold font-hindi hidden lg:inline ${
+                    isActive ? 'text-[#112A46]' : 'text-stone-300'
                   }`}
                 >
                   ({item.sublabel})
@@ -125,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
 
                 {item.badge !== undefined && item.badge > 0 && (
                   <span
-                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+                    className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
                       isActive
                         ? 'bg-[#112A46] text-[#FDFD96]'
                         : 'bg-[#FDFD96] text-[#112A46]'
@@ -144,8 +135,8 @@ export const Header: React.FC<HeaderProps> = ({
           <span
             className={
               isNgo
-                ? 'bg-[#FDFD96] text-black border border-[#D9D975] text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-[12px] uppercase tracking-wider'
-                : 'bg-[#FDFD96] text-[#112A46] border border-[#D9D975] text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-[12px] uppercase tracking-wider'
+                ? 'bg-gradient-to-r from-[#FDFD96] to-[#F5F27A] text-[#112A46] border border-[#D9D975] text-[10px] sm:text-[11px] font-extrabold px-3 py-1.5 rounded-[12px] uppercase tracking-wider shadow-2xs'
+                : 'bg-gradient-to-r from-[#FDFD96] to-[#F5F27A] text-[#112A46] border border-[#D9D975] text-[10px] sm:text-[11px] font-extrabold px-3 py-1.5 rounded-[12px] uppercase tracking-wider shadow-2xs'
             }
           >
             {roleLabel}
@@ -154,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOpenProfile}
             title="Profile / प्रोफ़ाइल"
             aria-label="User Profile"
-            className="w-9 h-9 rounded-[12px] bg-white/10 hover:bg-white/20 border border-[#ACC8E5]/40 flex items-center justify-center text-white transition-colors cursor-pointer"
+            className="btn-premium w-9 h-9 rounded-[12px] bg-white/10 hover:bg-white/20 border border-[#ACC8E5]/40 flex items-center justify-center text-white transition-colors cursor-pointer shadow-2xs"
           >
             <User size={18} />
           </button>
@@ -163,7 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onLogout}
               title="Logout / लॉगआउट"
               aria-label="Logout"
-              className="w-9 h-9 rounded-[12px] bg-white/10 hover:bg-red-500/20 border border-[#ACC8E5]/40 flex items-center justify-center text-white transition-colors cursor-pointer"
+              className="btn-premium w-9 h-9 rounded-[12px] bg-white/10 hover:bg-red-500/20 border border-[#ACC8E5]/40 flex items-center justify-center text-white transition-colors cursor-pointer shadow-2xs"
             >
               <LogOut size={16} />
             </button>
